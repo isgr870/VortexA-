@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+projects/*
+!projects/.gitkeep
+urdf/*
+!urdf/.gitkeep
+*.log
+server.log
+http.log
+.DS_Store
+*.zip
