@@ -1,0 +1,49 @@
+{
+  "name": "4WD Differential Rover",
+  "description": "Simple differential-drive mobile base",
+  "version": "2.1",
+  "links": [
+    {
+      "id": 0,
+      "name": "base_footprint",
+      "type": "fixed",
+      "length": 0.05,
+      "radius": 0.25,
+      "material": "aluminum",
+      "mass": 12.0,
+      "parent": null
+    },
+    {
+      "id": 1,
+      "name": "chassis",
+      "type": "fixed",
+      "length": 0.15,
+      "radius": 0.22,
+      "material": "aluminum",
+      "mass": 8.0,
+      "parent": 0
+    },
+    {
+      "id": 2,
+      "name": "left_wheel",
+      "type": "continuous",
+      "axis": "y",
+      "length": 0.05,
+      "radius": 0.08,
+      "material": "plastic",
+      "mass": 1.2,
+      "parent": 1
+    },
+    {
+      "id": 3,
+      "name": "right_wheel",
+      "type": "continuous",
+      "axis": "y",
+      "length": 0.05,
+      "radius": 0.08,
+      "material": "plastic",
+      "mass": 1.2,
+      "parent": 1
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "name": "TexaKit",
+  "version": "3.1",
+  "description": "Vortexa asset library \u2014 blueprints, full parts kit, sensors, EE, materials.",
+  "categories": {
+    "manipulator": [
+      "articulated_arm",
+      "scara_arm",
+      "production_cell_arm"
+    ],
+    "humanoid": [
+      "humanoid_torso_arm",
+      "dual_arm_humanoid"
+    ],
+    "mobility": [
+      "differential_rover",
+      "mobile_manipulator",
+      "hexapod_leg",
+      "hexapod_walker"
+    ],
+    "aerial": [
+      "quadrotor_frame"
+    ],
+    "custom": [
+      "blank"
+    ],
+    "sensors": [
+      {
+        "id": "imu_link",
+        "name": "IMU",
+        "type": "imu",
+        "desc": "Inertial measurement unit frame"
+      },
+      {
+        "id": "rgb_camera",
+        "name": "RGB Camera",
+        "type": "camera",
+        "desc": "Monocular camera optical frame"
+      },
+      {
+        "id": "depth_camera",
+        "name": "Depth Camera",
+        "type": "depth",
+        "desc": "Depth / RGB-D frame"
+      }
+    ],
+    "end_effectors": [
+      {
+        "id": "parallel_gripper",
+        "name": "Parallel Gripper",
+        "type": "gripper",
+        "desc": "2-finger parallel jaw"
+      },
+      {
+        "id": "vacuum_cup",
+        "name": "Vacuum Cup",
+        "type": "gripper",
+        "desc": "Suction end-effector"
+      },
+      {
+        "id": "tool_flange",
+        "name": "Tool Flange",
+        "type": "flange",
+        "desc": "ISO tool flange TCP"
+      }
+    ]
+  },
+  "end_effectors": [
+    {
+      "id": "parallel_gripper",
+      "name": "Parallel Gripper",
+      "mass": 0.35,
+      "stroke_m": 0.08
+    },
+    {
+      "id": "vacuum_cup",
+      "name": "Vacuum Cup",
+      "mass": 0.15,
+      "payload_kg": 2.0
+    },
+    {
+      "id": "tool_flange",
+      "name": "ISO Tool Flange",
+      "mass": 0.1
+    },
+    {
+      "id": "camera_mount",
+      "name": "Camera Mount",
+      "mass": 0.08
+    }
+  ],
+  "joint_presets": [
+    {
+      "id": "servo_standard",
+      "name": "Standard Servo",
+      "velocity": 2.0,
+      "effort": 20
+    },
+    {
+      "id": "servo_high_torque",
+      "name": "High Torque",
+      "velocity": 1.2,
+      "effort": 80
+    },
+    {
+      "id": "continuous_prop",
+      "name": "Prop / Wheel",
+      "velocity": 50,
+      "effort": 5
+    }
+  ],
+  "materials": [
+    "aluminum",
+    "carbon",
+    "titanium",
+    "plastic",
+    "steel"
+  ],
+  "control_modes": [
+    "joint_position",
+    "cartesian_jog",
+    "trajectory_play",
+    "hold"
+  ],
+  "features": [
+    "multi_chain",
+    "tcp_offset",
+    "trajectory_csv",
+    "command_control",
+    "texakit_dashboard"
+  ]
+}

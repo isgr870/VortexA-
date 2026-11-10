@@ -1,0 +1,509 @@
+{
+  "name": "Hexapod Walker",
+  "description": "Six 3-DoF legs on a central body. Select a leg chain for IK; pose others with joint sliders.",
+  "version": "2.6",
+  "category": "mobility",
+  "dof": 18,
+  "payload_kg": 2.0,
+  "reach_m": 0.35,
+  "multi_chain": true,
+  "chains": {
+    "body": [
+      {
+        "id": 0,
+        "name": "hex_body",
+        "type": "fixed",
+        "length": 0.1,
+        "radius": 0.18,
+        "material": "carbon",
+        "mass": 4.0,
+        "parent": null
+      }
+    ],
+    "leg_0": [
+      {
+        "name": "leg_0_coxa",
+        "type": "revolute",
+        "axis": "z",
+        "length": 0.07,
+        "radius": 0.03,
+        "material": "aluminum",
+        "mass": 0.25,
+        "limit": {
+          "lower": -0.9,
+          "upper": 0.9,
+          "velocity": 2.0,
+          "effort": 18
+        },
+        "id": 1,
+        "parent": 0
+      },
+      {
+        "name": "leg_0_femur",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.12,
+        "radius": 0.025,
+        "material": "carbon",
+        "mass": 0.2,
+        "limit": {
+          "lower": -1.4,
+          "upper": 1.4,
+          "velocity": 2.0,
+          "effort": 14
+        },
+        "id": 2,
+        "parent": 1
+      },
+      {
+        "name": "leg_0_tibia",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.14,
+        "radius": 0.022,
+        "material": "carbon",
+        "mass": 0.15,
+        "limit": {
+          "lower": -2.0,
+          "upper": 0.4,
+          "velocity": 2.5,
+          "effort": 10
+        },
+        "id": 3,
+        "parent": 2
+      }
+    ],
+    "leg_1": [
+      {
+        "name": "leg_1_coxa",
+        "type": "revolute",
+        "axis": "z",
+        "length": 0.07,
+        "radius": 0.03,
+        "material": "aluminum",
+        "mass": 0.25,
+        "limit": {
+          "lower": -0.9,
+          "upper": 0.9,
+          "velocity": 2.0,
+          "effort": 18
+        },
+        "id": 4,
+        "parent": 0
+      },
+      {
+        "name": "leg_1_femur",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.12,
+        "radius": 0.025,
+        "material": "carbon",
+        "mass": 0.2,
+        "limit": {
+          "lower": -1.4,
+          "upper": 1.4,
+          "velocity": 2.0,
+          "effort": 14
+        },
+        "id": 5,
+        "parent": 4
+      },
+      {
+        "name": "leg_1_tibia",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.14,
+        "radius": 0.022,
+        "material": "carbon",
+        "mass": 0.15,
+        "limit": {
+          "lower": -2.0,
+          "upper": 0.4,
+          "velocity": 2.5,
+          "effort": 10
+        },
+        "id": 6,
+        "parent": 5
+      }
+    ],
+    "leg_2": [
+      {
+        "name": "leg_2_coxa",
+        "type": "revolute",
+        "axis": "z",
+        "length": 0.07,
+        "radius": 0.03,
+        "material": "aluminum",
+        "mass": 0.25,
+        "limit": {
+          "lower": -0.9,
+          "upper": 0.9,
+          "velocity": 2.0,
+          "effort": 18
+        },
+        "id": 7,
+        "parent": 0
+      },
+      {
+        "name": "leg_2_femur",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.12,
+        "radius": 0.025,
+        "material": "carbon",
+        "mass": 0.2,
+        "limit": {
+          "lower": -1.4,
+          "upper": 1.4,
+          "velocity": 2.0,
+          "effort": 14
+        },
+        "id": 8,
+        "parent": 7
+      },
+      {
+        "name": "leg_2_tibia",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.14,
+        "radius": 0.022,
+        "material": "carbon",
+        "mass": 0.15,
+        "limit": {
+          "lower": -2.0,
+          "upper": 0.4,
+          "velocity": 2.5,
+          "effort": 10
+        },
+        "id": 9,
+        "parent": 8
+      }
+    ],
+    "leg_3": [
+      {
+        "name": "leg_3_coxa",
+        "type": "revolute",
+        "axis": "z",
+        "length": 0.07,
+        "radius": 0.03,
+        "material": "aluminum",
+        "mass": 0.25,
+        "limit": {
+          "lower": -0.9,
+          "upper": 0.9,
+          "velocity": 2.0,
+          "effort": 18
+        },
+        "id": 10,
+        "parent": 0
+      },
+      {
+        "name": "leg_3_femur",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.12,
+        "radius": 0.025,
+        "material": "carbon",
+        "mass": 0.2,
+        "limit": {
+          "lower": -1.4,
+          "upper": 1.4,
+          "velocity": 2.0,
+          "effort": 14
+        },
+        "id": 11,
+        "parent": 10
+      },
+      {
+        "name": "leg_3_tibia",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.14,
+        "radius": 0.022,
+        "material": "carbon",
+        "mass": 0.15,
+        "limit": {
+          "lower": -2.0,
+          "upper": 0.4,
+          "velocity": 2.5,
+          "effort": 10
+        },
+        "id": 12,
+        "parent": 11
+      }
+    ],
+    "leg_4": [
+      {
+        "name": "leg_4_coxa",
+        "type": "revolute",
+        "axis": "z",
+        "length": 0.07,
+        "radius": 0.03,
+        "material": "aluminum",
+        "mass": 0.25,
+        "limit": {
+          "lower": -0.9,
+          "upper": 0.9,
+          "velocity": 2.0,
+          "effort": 18
+        },
+        "id": 13,
+        "parent": 0
+      },
+      {
+        "name": "leg_4_femur",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.12,
+        "radius": 0.025,
+        "material": "carbon",
+        "mass": 0.2,
+        "limit": {
+          "lower": -1.4,
+          "upper": 1.4,
+          "velocity": 2.0,
+          "effort": 14
+        },
+        "id": 14,
+        "parent": 13
+      },
+      {
+        "name": "leg_4_tibia",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.14,
+        "radius": 0.022,
+        "material": "carbon",
+        "mass": 0.15,
+        "limit": {
+          "lower": -2.0,
+          "upper": 0.4,
+          "velocity": 2.5,
+          "effort": 10
+        },
+        "id": 15,
+        "parent": 14
+      }
+    ],
+    "leg_5": [
+      {
+        "name": "leg_5_coxa",
+        "type": "revolute",
+        "axis": "z",
+        "length": 0.07,
+        "radius": 0.03,
+        "material": "aluminum",
+        "mass": 0.25,
+        "limit": {
+          "lower": -0.9,
+          "upper": 0.9,
+          "velocity": 2.0,
+          "effort": 18
+        },
+        "id": 16,
+        "parent": 0
+      },
+      {
+        "name": "leg_5_femur",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.12,
+        "radius": 0.025,
+        "material": "carbon",
+        "mass": 0.2,
+        "limit": {
+          "lower": -1.4,
+          "upper": 1.4,
+          "velocity": 2.0,
+          "effort": 14
+        },
+        "id": 17,
+        "parent": 16
+      },
+      {
+        "name": "leg_5_tibia",
+        "type": "revolute",
+        "axis": "y",
+        "length": 0.14,
+        "radius": 0.022,
+        "material": "carbon",
+        "mass": 0.15,
+        "limit": {
+          "lower": -2.0,
+          "upper": 0.4,
+          "velocity": 2.5,
+          "effort": 10
+        },
+        "id": 18,
+        "parent": 17
+      }
+    ]
+  },
+  "default_chain": "leg_0",
+  "tcp_offset": {
+    "xyz": [
+      0,
+      0,
+      0
+    ],
+    "rpy": [
+      0,
+      0,
+      0
+    ]
+  },
+  "links": [
+    {
+      "id": 0,
+      "name": "hex_body",
+      "type": "fixed",
+      "length": 0.1,
+      "radius": 0.18,
+      "material": "carbon",
+      "mass": 4.0,
+      "parent": null
+    },
+    {
+      "name": "leg_0_coxa",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.07,
+      "radius": 0.03,
+      "material": "aluminum",
+      "mass": 0.25,
+      "limit": {
+        "lower": -0.9,
+        "upper": 0.9,
+        "velocity": 2.0,
+        "effort": 18
+      },
+      "id": 1,
+      "parent": 0
+    },
+    {
+      "name": "leg_0_femur",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.12,
+      "radius": 0.025,
+      "material": "carbon",
+      "mass": 0.2,
+      "limit": {
+        "lower": -1.4,
+        "upper": 1.4,
+        "velocity": 2.0,
+        "effort": 14
+      },
+      "id": 2,
+      "parent": 1
+    },
+    {
+      "name": "leg_0_tibia",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.14,
+      "radius": 0.022,
+      "material": "carbon",
+      "mass": 0.15,
+      "limit": {
+        "lower": -2.0,
+        "upper": 0.4,
+        "velocity": 2.5,
+        "effort": 10
+      },
+      "id": 3,
+      "parent": 2
+    }
+  ],
+  "chain_origins": {
+    "body": {
+      "xyz": [
+        0,
+        0,
+        0.08
+      ],
+      "rpy": [
+        0,
+        0,
+        0
+      ]
+    },
+    "leg_0": {
+      "xyz": [
+        0.16,
+        0.0,
+        0.06
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "leg_1": {
+      "xyz": [
+        0.08000000000000002,
+        0.13856406460551018,
+        0.06
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        1.0471975511965976
+      ]
+    },
+    "leg_2": {
+      "xyz": [
+        -0.07999999999999996,
+        0.13856406460551018,
+        0.06
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        2.0943951023931953
+      ]
+    },
+    "leg_3": {
+      "xyz": [
+        -0.16,
+        1.959434878635765e-17,
+        0.06
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        3.141592653589793
+      ]
+    },
+    "leg_4": {
+      "xyz": [
+        -0.08000000000000007,
+        -0.13856406460551016,
+        0.06
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        4.1887902047863905
+      ]
+    },
+    "leg_5": {
+      "xyz": [
+        0.08000000000000002,
+        -0.13856406460551018,
+        0.06
+      ],
+      "rpy": [
+        0.0,
+        0.0,
+        5.235987755982989
+      ]
+    }
+  },
+  "default_target": [
+    0.22,
+    0.0,
+    -0.05
+  ]
+}

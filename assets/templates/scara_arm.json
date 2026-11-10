@@ -1,0 +1,94 @@
+{
+  "name": "SCARA Research Arm",
+  "description": "Horizontal SCARA-style 4-DOF for assembly and research cells",
+  "version": "2.4",
+  "manufacturer_style": "scara",
+  "dof": 4,
+  "payload_kg": 3.0,
+  "reach_m": 0.55,
+  "links": [
+    {
+      "id": 0,
+      "name": "base_link",
+      "type": "fixed",
+      "length": 0.12,
+      "radius": 0.1,
+      "material": "aluminum",
+      "mass": 6.0,
+      "parent": null
+    },
+    {
+      "id": 1,
+      "name": "shoulder",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.28,
+      "radius": 0.05,
+      "material": "aluminum",
+      "mass": 2.5,
+      "parent": 0,
+      "limit": {
+        "lower": -2.8,
+        "upper": 2.8,
+        "velocity": 2.0,
+        "effort": 40
+      }
+    },
+    {
+      "id": 2,
+      "name": "elbow",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.22,
+      "radius": 0.04,
+      "material": "carbon",
+      "mass": 1.5,
+      "parent": 1,
+      "limit": {
+        "lower": -2.5,
+        "upper": 2.5,
+        "velocity": 2.5,
+        "effort": 25
+      }
+    },
+    {
+      "id": 3,
+      "name": "z_slide",
+      "type": "prismatic",
+      "axis": "z",
+      "length": 0.08,
+      "radius": 0.03,
+      "material": "titanium",
+      "mass": 0.8,
+      "parent": 2,
+      "limit": {
+        "lower": 0.0,
+        "upper": 0.25,
+        "velocity": 0.5,
+        "effort": 50
+      }
+    },
+    {
+      "id": 4,
+      "name": "wrist_roll",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.06,
+      "radius": 0.025,
+      "material": "aluminum",
+      "mass": 0.4,
+      "parent": 3,
+      "limit": {
+        "lower": -6.28,
+        "upper": 6.28,
+        "velocity": 3.0,
+        "effort": 10
+      }
+    }
+  ],
+  "default_target": [
+    0.35,
+    0.15,
+    0.15
+  ]
+}

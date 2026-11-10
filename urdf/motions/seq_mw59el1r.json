@@ -1,0 +1,11 @@
+{
+  "name": "seq_mw59el1r",
+  "waypoints": [
+    {
+      "joints": [],
+      "label": "T1"
+    }
+  ],
+  "template": "quadrotor_frame",
+  "active_chain": "hub"
+}

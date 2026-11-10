@@ -1,0 +1,280 @@
+{
+  "version": "1.0",
+  "presets": {
+    "home": {
+      "label": "Home",
+      "description": "Neutral ready pose"
+    },
+    "stow": {
+      "label": "Stow",
+      "description": "Compact folded pose"
+    },
+    "reach_forward": {
+      "label": "Reach Forward",
+      "description": "Extended workspace pose"
+    },
+    "inspect": {
+      "label": "Inspect",
+      "description": "Elbow up for inspection"
+    },
+    "walk_stance": {
+      "label": "Walk Stance",
+      "description": "Hexapod stable stance (active leg)"
+    },
+    "prop_idle": {
+      "label": "Prop Idle",
+      "description": "Quadrotor motors zero"
+    },
+    "handoff": {
+      "label": "Handoff",
+      "description": "Dual-arm coordinated handoff pose (active arm)"
+    }
+  },
+  "by_template": {
+    "articulated_arm": {
+      "home": [
+        -0.0,
+        -0.6,
+        1.0,
+        0.0,
+        0.3,
+        0.0
+      ],
+      "stow": [
+        0.0,
+        1.2,
+        -2.2,
+        0.0,
+        0.8,
+        0.0
+      ],
+      "reach_forward": [
+        0.0,
+        -0.3,
+        0.5,
+        0.0,
+        0.2,
+        0.0
+      ],
+      "inspect": [
+        0.4,
+        -0.8,
+        1.4,
+        -0.5,
+        0.5,
+        0.0
+      ]
+    },
+    "production_cell_arm": {
+      "home": [
+        0.0,
+        -0.5,
+        0.9,
+        0.0,
+        0.4,
+        0.0
+      ],
+      "stow": [
+        0.0,
+        1.0,
+        -2.0,
+        0.0,
+        0.6,
+        0.0
+      ],
+      "reach_forward": [
+        0.0,
+        -0.2,
+        0.4,
+        0.0,
+        0.1,
+        0.0
+      ]
+    },
+    "humanoid_torso_arm": {
+      "home": [
+        0.0,
+        -0.5,
+        0.3,
+        -0.8,
+        0.0,
+        0.2
+      ],
+      "stow": [
+        0.3,
+        0.8,
+        0.5,
+        -1.8,
+        0.4,
+        0.5
+      ],
+      "reach_forward": [
+        0.0,
+        -0.3,
+        0.1,
+        -0.4,
+        0.0,
+        0.0
+      ],
+      "inspect": [
+        0.5,
+        -0.7,
+        0.4,
+        -1.0,
+        0.6,
+        0.3
+      ]
+    },
+    "dual_arm_humanoid": {
+      "home": [
+        0.0,
+        -0.4,
+        0.8,
+        0.0,
+        0.3,
+        0.0
+      ],
+      "stow": [
+        0.0,
+        1.0,
+        -1.8,
+        0.0,
+        0.5,
+        0.0
+      ],
+      "reach_forward": [
+        0.0,
+        -0.2,
+        0.5,
+        0.0,
+        0.2,
+        0.0
+      ],
+      "inspect": [
+        0.3,
+        -0.6,
+        1.0,
+        -0.3,
+        0.4,
+        0.0
+      ],
+      "handoff": [
+        0.5,
+        -0.5,
+        0.9,
+        0.0,
+        0.3,
+        0.0
+      ]
+    },
+    "hexapod_walker": {
+      "home": [
+        0.3,
+        -0.6,
+        1.0
+      ],
+      "walk_stance": [
+        0.4,
+        -0.5,
+        0.9
+      ],
+      "stow": [
+        0.0,
+        -1.2,
+        1.8
+      ]
+    },
+    "hexapod_leg": {
+      "home": [
+        0.3,
+        -0.6,
+        1.0
+      ],
+      "walk_stance": [
+        0.4,
+        -0.5,
+        0.9
+      ]
+    },
+    "scara_arm": {
+      "home": [
+        0.0,
+        0.5,
+        0.0,
+        0.05
+      ],
+      "stow": [
+        1.2,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "reach_forward": [
+        0.0,
+        0.2,
+        0.0,
+        0.08
+      ]
+    },
+    "quadrotor_frame": {
+      "home": [
+        0.0
+      ],
+      "prop_idle": [
+        0.0
+      ]
+    },
+    "blank": {
+      "home": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "stow": [
+        0.0,
+        1.0,
+        -1.8,
+        0.0,
+        0.5,
+        0.0
+      ],
+      "reach_forward": [
+        0.0,
+        -0.4,
+        0.8,
+        0.0,
+        0.3,
+        0.0
+      ]
+    },
+    "custom": {
+      "home": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "stow": [
+        0.0,
+        1.0,
+        -1.8,
+        0.0,
+        0.5,
+        0.0
+      ],
+      "reach_forward": [
+        0.0,
+        -0.4,
+        0.8,
+        0.0,
+        0.3,
+        0.0
+      ]
+    }
+  }
+}

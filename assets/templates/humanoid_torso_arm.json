@@ -1,0 +1,128 @@
+{
+  "name": "Humanoid Arm + Torso",
+  "description": "Upper-body research humanoid: torso pedestal + 6-DoF arm. Foundation for dual-arm expansion.",
+  "version": "2.5",
+  "category": "humanoid",
+  "dof": 6,
+  "payload_kg": 3.0,
+  "reach_m": 0.75,
+  "links": [
+    {
+      "id": 0,
+      "name": "torso_base",
+      "type": "fixed",
+      "length": 0.22,
+      "radius": 0.14,
+      "material": "aluminum",
+      "mass": 12.0,
+      "parent": null
+    },
+    {
+      "id": 1,
+      "name": "shoulder_yaw",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.12,
+      "radius": 0.07,
+      "material": "aluminum",
+      "mass": 2.0,
+      "parent": 0,
+      "limit": {
+        "lower": -2.5,
+        "upper": 2.5,
+        "velocity": 2.0,
+        "effort": 80
+      }
+    },
+    {
+      "id": 2,
+      "name": "shoulder_pitch",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.28,
+      "radius": 0.055,
+      "material": "carbon",
+      "mass": 1.8,
+      "parent": 1,
+      "limit": {
+        "lower": -2.0,
+        "upper": 1.5,
+        "velocity": 2.0,
+        "effort": 80
+      }
+    },
+    {
+      "id": 3,
+      "name": "shoulder_roll",
+      "type": "revolute",
+      "axis": "x",
+      "length": 0.08,
+      "radius": 0.05,
+      "material": "carbon",
+      "mass": 1.2,
+      "parent": 2,
+      "limit": {
+        "lower": -1.8,
+        "upper": 1.8,
+        "velocity": 2.5,
+        "effort": 50
+      }
+    },
+    {
+      "id": 4,
+      "name": "elbow",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.25,
+      "radius": 0.045,
+      "material": "carbon",
+      "mass": 1.0,
+      "parent": 3,
+      "limit": {
+        "lower": -2.4,
+        "upper": 0.2,
+        "velocity": 2.5,
+        "effort": 40
+      }
+    },
+    {
+      "id": 5,
+      "name": "wrist_yaw",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.08,
+      "radius": 0.035,
+      "material": "titanium",
+      "mass": 0.4,
+      "parent": 4,
+      "limit": {
+        "lower": -2.8,
+        "upper": 2.8,
+        "velocity": 3.0,
+        "effort": 15
+      }
+    },
+    {
+      "id": 6,
+      "name": "wrist_pitch",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.07,
+      "radius": 0.03,
+      "material": "titanium",
+      "mass": 0.3,
+      "parent": 5,
+      "limit": {
+        "lower": -1.5,
+        "upper": 1.5,
+        "velocity": 3.0,
+        "effort": 12
+      }
+    }
+  ],
+  "default_target": [
+    0.3,
+    0.15,
+    0.55
+  ]
+}

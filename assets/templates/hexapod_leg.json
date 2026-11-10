@@ -1,0 +1,72 @@
+{
+  "name": "Hexapod Leg Module",
+  "description": "One 3-DoF leg module. Use as building block for walking robot research.",
+  "version": "2.5",
+  "category": "mobility",
+  "dof": 3,
+  "payload_kg": 1.0,
+  "reach_m": 0.35,
+  "links": [
+    {
+      "id": 0,
+      "name": "hip_mount",
+      "type": "fixed",
+      "length": 0.06,
+      "radius": 0.05,
+      "material": "aluminum",
+      "mass": 0.5,
+      "parent": null
+    },
+    {
+      "id": 1,
+      "name": "coxa",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.08,
+      "radius": 0.035,
+      "material": "aluminum",
+      "mass": 0.3,
+      "parent": 0,
+      "limit": {
+        "lower": -1.0,
+        "upper": 1.0,
+        "velocity": 2.0,
+        "effort": 20
+      }
+    },
+    {
+      "id": 2,
+      "name": "femur",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.14,
+      "radius": 0.03,
+      "material": "carbon",
+      "mass": 0.25,
+      "parent": 1,
+      "limit": {
+        "lower": -1.5,
+        "upper": 1.5,
+        "velocity": 2.0,
+        "effort": 15
+      }
+    },
+    {
+      "id": 3,
+      "name": "tibia",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.16,
+      "radius": 0.025,
+      "material": "carbon",
+      "mass": 0.2,
+      "parent": 2,
+      "limit": {
+        "lower": -2.0,
+        "upper": 0.5,
+        "velocity": 2.5,
+        "effort": 12
+      }
+    }
+  ]
+}

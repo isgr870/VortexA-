@@ -1,0 +1,128 @@
+{
+  "name": "Production Cell Arm",
+  "description": "Long-reach 6-DoF for assembly lines and production research.",
+  "version": "2.5",
+  "category": "production",
+  "dof": 6,
+  "payload_kg": 8.0,
+  "reach_m": 1.2,
+  "links": [
+    {
+      "id": 0,
+      "name": "cell_base",
+      "type": "fixed",
+      "length": 0.2,
+      "radius": 0.15,
+      "material": "aluminum",
+      "mass": 30.0,
+      "parent": null
+    },
+    {
+      "id": 1,
+      "name": "j1",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.18,
+      "radius": 0.1,
+      "material": "aluminum",
+      "mass": 8.0,
+      "parent": 0,
+      "limit": {
+        "lower": -3.0,
+        "upper": 3.0,
+        "velocity": 1.5,
+        "effort": 200
+      }
+    },
+    {
+      "id": 2,
+      "name": "j2",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.55,
+      "radius": 0.08,
+      "material": "carbon",
+      "mass": 6.0,
+      "parent": 1,
+      "limit": {
+        "lower": -2.5,
+        "upper": 0.8,
+        "velocity": 1.2,
+        "effort": 180
+      }
+    },
+    {
+      "id": 3,
+      "name": "j3",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.5,
+      "radius": 0.065,
+      "material": "carbon",
+      "mass": 4.0,
+      "parent": 2,
+      "limit": {
+        "lower": -3.0,
+        "upper": 3.0,
+        "velocity": 1.5,
+        "effort": 100
+      }
+    },
+    {
+      "id": 4,
+      "name": "j4",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.15,
+      "radius": 0.045,
+      "material": "titanium",
+      "mass": 1.5,
+      "parent": 3,
+      "limit": {
+        "lower": -3.14,
+        "upper": 3.14,
+        "velocity": 2.5,
+        "effort": 40
+      }
+    },
+    {
+      "id": 5,
+      "name": "j5",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.12,
+      "radius": 0.04,
+      "material": "titanium",
+      "mass": 1.0,
+      "parent": 4,
+      "limit": {
+        "lower": -2.0,
+        "upper": 2.0,
+        "velocity": 2.5,
+        "effort": 30
+      }
+    },
+    {
+      "id": 6,
+      "name": "j6",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.08,
+      "radius": 0.03,
+      "material": "titanium",
+      "mass": 0.6,
+      "parent": 5,
+      "limit": {
+        "lower": -6.28,
+        "upper": 6.28,
+        "velocity": 3.0,
+        "effort": 20
+      }
+    }
+  ],
+  "default_target": [
+    0.4,
+    0.0,
+    0.5
+  ]
+}

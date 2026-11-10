@@ -1,0 +1,19 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# texoff – Stop Vortexa Studio
+
+echo "Stopping Vortexa Studio..."
+
+if [ -f /tmp/vortexa_ws.pid ]; then
+  kill "$(cat /tmp/vortexa_ws.pid)" 2>/dev/null || true
+  rm -f /tmp/vortexa_ws.pid
+fi
+
+if [ -f /tmp/vortexa_http.pid ]; then
+  kill "$(cat /tmp/vortexa_http.pid)" 2>/dev/null || true
+  rm -f /tmp/vortexa_http.pid
+fi
+
+pkill -f "python3 server.py" 2>/dev/null || true
+pkill -f "http.server 8080" 2>/dev/null || true
+
+echo "Vortexa stopped."

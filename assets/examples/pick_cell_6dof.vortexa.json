@@ -1,0 +1,171 @@
+{
+  "format": "vortexa_project",
+  "version": "3.5",
+  "name": "6-DoF Pick Cell",
+  "template": "articulated_arm",
+  "notes": "Classic industrial arm for pick-and-place.",
+  "topology": [
+    {
+      "id": 0,
+      "name": "base_link",
+      "type": "fixed",
+      "length": 0.12,
+      "radius": 0.1,
+      "mass": 5.0,
+      "parent": null,
+      "material": "steel",
+      "kind": "base"
+    },
+    {
+      "id": 1,
+      "name": "shoulder",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.15,
+      "radius": 0.06,
+      "mass": 2.0,
+      "parent": 0,
+      "material": "aluminum",
+      "limit": {
+        "lower": -3.14,
+        "upper": 3.14,
+        "effort": 80,
+        "velocity": 1.5
+      }
+    },
+    {
+      "id": 2,
+      "name": "upper_arm",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.35,
+      "radius": 0.045,
+      "mass": 1.5,
+      "parent": 1,
+      "material": "aluminum",
+      "limit": {
+        "lower": -2.0,
+        "upper": 2.0,
+        "effort": 60,
+        "velocity": 1.5
+      }
+    },
+    {
+      "id": 3,
+      "name": "forearm",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.3,
+      "radius": 0.04,
+      "mass": 1.0,
+      "parent": 2,
+      "material": "aluminum",
+      "limit": {
+        "lower": -2.5,
+        "upper": 2.5,
+        "effort": 40,
+        "velocity": 2.0
+      }
+    },
+    {
+      "id": 4,
+      "name": "wrist_1",
+      "type": "revolute",
+      "axis": "x",
+      "length": 0.08,
+      "radius": 0.035,
+      "mass": 0.4,
+      "parent": 3,
+      "material": "aluminum",
+      "limit": {
+        "lower": -3.14,
+        "upper": 3.14,
+        "effort": 20,
+        "velocity": 3.0
+      }
+    },
+    {
+      "id": 5,
+      "name": "wrist_2",
+      "type": "revolute",
+      "axis": "y",
+      "length": 0.08,
+      "radius": 0.03,
+      "mass": 0.3,
+      "parent": 4,
+      "material": "aluminum",
+      "limit": {
+        "lower": -3.14,
+        "upper": 3.14,
+        "effort": 15,
+        "velocity": 3.0
+      }
+    },
+    {
+      "id": 6,
+      "name": "wrist_3",
+      "type": "revolute",
+      "axis": "z",
+      "length": 0.06,
+      "radius": 0.028,
+      "mass": 0.2,
+      "parent": 5,
+      "material": "aluminum",
+      "limit": {
+        "lower": -3.14,
+        "upper": 3.14,
+        "effort": 10,
+        "velocity": 3.0
+      }
+    },
+    {
+      "id": 7,
+      "name": "gripper",
+      "type": "fixed",
+      "length": 0.1,
+      "radius": 0.04,
+      "mass": 0.35,
+      "parent": 6,
+      "material": "plastic",
+      "kind": "gripper"
+    }
+  ],
+  "joint_angles": [
+    0,
+    -0.5,
+    1.0,
+    0,
+    0.4,
+    0
+  ],
+  "tcp": {
+    "xyz": [
+      0,
+      0,
+      0.08
+    ],
+    "rpy": [
+      0,
+      0,
+      0
+    ]
+  },
+  "scene": [
+    {
+      "type": "box",
+      "name": "table",
+      "size": [
+        0.6,
+        0.6,
+        0.05
+      ],
+      "position": [
+        0.45,
+        0,
+        0.4
+      ],
+      "color": 3359061
+    }
+  ],
+  "motions": []
+}

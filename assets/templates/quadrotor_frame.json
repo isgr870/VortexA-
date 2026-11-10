@@ -1,0 +1,264 @@
+{
+  "name": "Quadrotor Research Frame",
+  "description": "X-frame with four arm+prop chains. Select a motor chain for joint control.",
+  "version": "2.7",
+  "category": "aerial",
+  "dof": 4,
+  "payload_kg": 0.5,
+  "reach_m": 0.25,
+  "multi_chain": true,
+  "default_chain": "motor_0",
+  "tcp_offset": {
+    "xyz": [
+      0,
+      0,
+      0
+    ],
+    "rpy": [
+      0,
+      0,
+      0
+    ]
+  },
+  "default_target": [
+    0.15,
+    0.15,
+    0.05
+  ],
+  "chain_origins": {
+    "hub": {
+      "xyz": [
+        0,
+        0,
+        0
+      ],
+      "rpy": [
+        0,
+        0,
+        0
+      ]
+    },
+    "motor_0": {
+      "xyz": [
+        0.028284271247461905,
+        0.028284271247461898,
+        0.02
+      ],
+      "rpy": [
+        0,
+        0,
+        0.7853981633974483
+      ]
+    },
+    "motor_1": {
+      "xyz": [
+        -0.028284271247461898,
+        0.028284271247461905,
+        0.02
+      ],
+      "rpy": [
+        0,
+        0,
+        2.356194490192345
+      ]
+    },
+    "motor_2": {
+      "xyz": [
+        -0.02828427124746191,
+        -0.028284271247461898,
+        0.02
+      ],
+      "rpy": [
+        0,
+        0,
+        3.9269908169872414
+      ]
+    },
+    "motor_3": {
+      "xyz": [
+        0.028284271247461894,
+        -0.02828427124746191,
+        0.02
+      ],
+      "rpy": [
+        0,
+        0,
+        5.497787143782138
+      ]
+    }
+  },
+  "chains": {
+    "hub": [
+      {
+        "id": 0,
+        "name": "hub",
+        "type": "fixed",
+        "length": 0.04,
+        "radius": 0.08,
+        "material": "carbon",
+        "mass": 0.35,
+        "parent": null
+      }
+    ],
+    "motor_0": [
+      {
+        "id": 10,
+        "name": "arm_0",
+        "type": "fixed",
+        "length": 0.18,
+        "radius": 0.012,
+        "material": "carbon",
+        "mass": 0.05,
+        "parent": null,
+        "axis": "x"
+      },
+      {
+        "id": 11,
+        "name": "prop_0",
+        "type": "continuous",
+        "length": 0.02,
+        "radius": 0.04,
+        "material": "plastic",
+        "mass": 0.03,
+        "parent": 10,
+        "axis": "z",
+        "limit": {
+          "lower": -1000000.0,
+          "upper": 1000000.0,
+          "velocity": 100,
+          "effort": 2
+        }
+      }
+    ],
+    "motor_1": [
+      {
+        "id": 12,
+        "name": "arm_1",
+        "type": "fixed",
+        "length": 0.18,
+        "radius": 0.012,
+        "material": "carbon",
+        "mass": 0.05,
+        "parent": null,
+        "axis": "x"
+      },
+      {
+        "id": 13,
+        "name": "prop_1",
+        "type": "continuous",
+        "length": 0.02,
+        "radius": 0.04,
+        "material": "plastic",
+        "mass": 0.03,
+        "parent": 12,
+        "axis": "z",
+        "limit": {
+          "lower": -1000000.0,
+          "upper": 1000000.0,
+          "velocity": 100,
+          "effort": 2
+        }
+      }
+    ],
+    "motor_2": [
+      {
+        "id": 14,
+        "name": "arm_2",
+        "type": "fixed",
+        "length": 0.18,
+        "radius": 0.012,
+        "material": "carbon",
+        "mass": 0.05,
+        "parent": null,
+        "axis": "x"
+      },
+      {
+        "id": 15,
+        "name": "prop_2",
+        "type": "continuous",
+        "length": 0.02,
+        "radius": 0.04,
+        "material": "plastic",
+        "mass": 0.03,
+        "parent": 14,
+        "axis": "z",
+        "limit": {
+          "lower": -1000000.0,
+          "upper": 1000000.0,
+          "velocity": 100,
+          "effort": 2
+        }
+      }
+    ],
+    "motor_3": [
+      {
+        "id": 16,
+        "name": "arm_3",
+        "type": "fixed",
+        "length": 0.18,
+        "radius": 0.012,
+        "material": "carbon",
+        "mass": 0.05,
+        "parent": null,
+        "axis": "x"
+      },
+      {
+        "id": 17,
+        "name": "prop_3",
+        "type": "continuous",
+        "length": 0.02,
+        "radius": 0.04,
+        "material": "plastic",
+        "mass": 0.03,
+        "parent": 16,
+        "axis": "z",
+        "limit": {
+          "lower": -1000000.0,
+          "upper": 1000000.0,
+          "velocity": 100,
+          "effort": 2
+        }
+      }
+    ]
+  },
+  "links": [
+    {
+      "id": 0,
+      "name": "hub",
+      "type": "fixed",
+      "length": 0.04,
+      "radius": 0.08,
+      "material": "carbon",
+      "mass": 0.35,
+      "parent": null
+    },
+    {
+      "id": 10,
+      "name": "arm_0",
+      "type": "fixed",
+      "length": 0.18,
+      "radius": 0.012,
+      "material": "carbon",
+      "mass": 0.05,
+      "parent": null,
+      "axis": "x"
+    },
+    {
+      "id": 11,
+      "name": "prop_0",
+      "type": "continuous",
+      "length": 0.02,
+      "radius": 0.04,
+      "material": "plastic",
+      "mass": 0.03,
+      "parent": 10,
+      "axis": "z",
+      "limit": {
+        "lower": -1000000.0,
+        "upper": 1000000.0,
+        "velocity": 100,
+        "effort": 2
+      }
+    }
+  ]
+}

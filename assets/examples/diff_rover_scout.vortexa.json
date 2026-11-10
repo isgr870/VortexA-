@@ -1,0 +1,62 @@
+{
+  "format": "vortexa_project",
+  "version": "3.5",
+  "name": "Diff Rover Scout",
+  "template": "differential_rover",
+  "notes": "Mobile base for inspection.",
+  "topology": [
+    {
+      "id": 0,
+      "name": "chassis",
+      "type": "fixed",
+      "length": 0.2,
+      "radius": 0.15,
+      "mass": 4.0,
+      "parent": null,
+      "material": "aluminum",
+      "kind": "chassis"
+    },
+    {
+      "id": 1,
+      "name": "wheel_left",
+      "type": "continuous",
+      "axis": "y",
+      "length": 0.04,
+      "radius": 0.08,
+      "mass": 0.5,
+      "parent": 0,
+      "material": "plastic",
+      "kind": "wheel"
+    },
+    {
+      "id": 2,
+      "name": "wheel_right",
+      "type": "continuous",
+      "axis": "y",
+      "length": 0.04,
+      "radius": 0.08,
+      "mass": 0.5,
+      "parent": 0,
+      "material": "plastic",
+      "kind": "wheel"
+    },
+    {
+      "id": 3,
+      "name": "lidar",
+      "type": "fixed",
+      "length": 0.04,
+      "radius": 0.04,
+      "mass": 0.2,
+      "parent": 0,
+      "material": "abs",
+      "kind": "sensor",
+      "sensor": "lidar"
+    }
+  ],
+  "joint_angles": [
+    0,
+    0
+  ],
+  "scene": [],
+  "motions": []
+}

@@ -1,0 +1,18 @@
+#!/data/data/com.termux/files/usr/bin/bash
+cd /data/data/com.termux/files/home/VortexA || exit 1
+pkill -f "python3 server.py" 2>/dev/null
+pkill -f "http.server 8080" 2>/dev/null
+sleep 0.6
+export VORTEXA_PORT=8766
+export VORTEXA_HOST=127.0.0.1
+python3 -u server.py > server.log 2>&1 &
+SPID=$!
+python3 -u -m http.server 8080 --bind 127.0.0.1 > http.log 2>&1 &
+HPID=$!
+sleep 1
+echo "Vortexa Studio started"
+echo "  UI  → http://127.0.0.1:8080/?v=353"
+echo "  WS  → ws://127.0.0.1:8766"
+echo "  PIDs server=$SPID http=$HPID"
+echo "---- log ----"
+head -5 server.log 2>/dev/null

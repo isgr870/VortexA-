@@ -1,0 +1,28 @@
+{
+  "format": "vortexa_project",
+  "version": "3.5",
+  "name": "Dual-Arm Handoff",
+  "template": "dual_arm_humanoid",
+  "use_template": "dual_arm_humanoid",
+  "notes": "Load dual-arm humanoid template for coordinated work.",
+  "topology": [],
+  "joint_angles": [],
+  "scene": [
+    {
+      "type": "box",
+      "name": "bench",
+      "size": [
+        0.5,
+        0.3,
+        0.05
+      ],
+      "position": [
+        0.4,
+        0,
+        0.9
+      ],
+      "color": 4674921
+    }
+  ],
+  "motions": []
+}

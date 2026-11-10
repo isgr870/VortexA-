@@ -1,0 +1,2211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <title>Vortexa Studio</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --surface: #1e1e1e;
+      --surface2: #2a2a2a;
+      --border: #3a3a3a;
+      --accent: #3b82f6;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+
+    #topbar {
+      height: 48px; background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 12px; gap: 8px; z-index: 100;
+    }
+    .brand { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .brand em { font-style: normal; color: var(--accent); }
+    .brand small { font-weight: 400; color: var(--muted); font-size: 11px; }
+    .spacer { flex: 1; }
+    .pill {
+      font-size: 11px; padding: 4px 10px; border-radius: 999px; background: #1a2e1a; color: var(--success);
+    }
+    .pill.off { background: #2a1a1a; color: var(--danger); }
+
+    #toolbar {
+      height: 44px; background: #1a1a1a; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 10px; gap: 6px; overflow-x: auto;
+    }
+    .tb-btn {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; white-space: nowrap;
+    }
+    .tb-btn:hover { background: #333; }
+    .tb-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+    .tb-btn.ghost { background: transparent; }
+    .tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+
+    #workspace { position: absolute; top: 132px; left: 0; right: 0; bottom: 0; display: flex; }
+    #viewport { flex: 1; position: relative; background: #0d0d0d; }
+    #viewport canvas { display: block; width: 100% !important; height: 100% !important; }
+
+    #dock {
+      width: 320px; background: var(--surface); border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .dock-tabs { display: flex; border-bottom: 1px solid var(--border); background: #1a1a1a; }
+    .dock-tab {
+      flex: 1; text-align: center; padding: 10px 4px; font-size: 11px; font-weight: 500;
+      color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+    }
+    .dock-tab.active { color: var(--text); border-bottom-color: var(--accent); background: var(--surface); }
+    .dock-body { flex: 1; overflow-y: auto; padding: 12px; }
+
+    .section-title {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+      margin: 14px 0 8px; font-weight: 600;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .card {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px; margin-bottom: 10px; cursor: pointer;
+    }
+    .card:hover, .card.active { border-color: var(--accent); }
+    .card h4 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+    .card p { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    .card .tag {
+      display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 4px;
+      background: #1e3a5f; color: #93c5fd; margin-top: 6px;
+    }
+
+    .joint { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
+    .joint label { width: 26px; color: var(--muted); }
+    .joint input[type=range] { flex: 1; accent-color: var(--accent); height: 4px; }
+    .joint .val { width: 40px; text-align: right; color: #cbd5e1; }
+
+    .status-card {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 1px solid #334155; border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
+    }
+    .status-card .headline { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .status-card .sub { font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .status-card.success { border-color: #166534; }
+    .status-card.success .headline { color: var(--success); }
+    .status-card.warn .headline { color: var(--warning); }
+
+    .metric-row { display: flex; gap: 8px; margin-top: 10px; }
+    .metric { flex: 1; background: #0f172a; border-radius: 6px; padding: 8px; text-align: center; }
+    .metric .num { font-size: 16px; font-weight: 700; }
+    .metric .lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    .builder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .builder-btn {
+      background: var(--surface2); border: 1px dashed #555; border-radius: 8px;
+      padding: 14px 8px; text-align: center; cursor: pointer; font-size: 12px;
+    }
+    .builder-btn:hover { border-color: var(--accent); background: #1e293b; }
+    .builder-btn .icon { font-size: 20px; margin-bottom: 4px; display: block; }
+
+    .empty {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; pointer-events: none; z-index: 5;
+    }
+    .empty h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; opacity: 0.9; }
+    .empty p { color: var(--muted); font-size: 14px; max-width: 280px; text-align: center; line-height: 1.5; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      padding: 5px 10px; border-radius: 999px; font-size: 11px; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface2);
+    }
+    .chip.active, .chip:hover { border-color: var(--accent); background: #1e3a5f; }
+
+    
+    @media (min-width: 900px) {
+      #dock { max-height: 42vh; }
+      .tb-btn { font-size: 13px; padding: 8px 14px; }
+      .chip { font-size: 13px; }
+      body { font-size: 15px; }
+    }
+    @media (min-width: 1200px) {
+      #app { max-width: 1400px; margin: 0 auto; }
+      #dock { max-height: 38vh; }
+    }
+
+    @media (max-width: 720px) {
+      #dock { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; height: 42%; border-left: none; border-top: 1px solid var(--border); }
+    }
+
+    #modebar {
+      position: absolute; top: 92px; left: 0; right: 0;
+      display: flex; gap: 4px; padding: 6px 10px; background: #0f1419;
+      border-bottom: 1px solid var(--border); overflow-x: auto; z-index: 5;
+    }
+    .mode-btn {
+      background: transparent; border: 1px solid transparent; color: var(--muted);
+      padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; white-space: nowrap;
+    }
+    .mode-btn:hover { color: var(--text); background: #1a2332; }
+    .mode-btn.active { color: #fff; background: #1e3a5f; border-color: var(--accent); }
+    .parts-cat { margin-bottom: 12px; }
+    .parts-cat h4 {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); margin: 0 0 6px;
+    }
+    .parts-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    }
+    .part-btn {
+      background: #141a22; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 4px; text-align: center; cursor: pointer; font-size: 11px; color: var(--text);
+    }
+    .part-btn:hover { border-color: var(--accent); background: #1e293b; }
+    .part-btn .icon { display: block; font-size: 16px; margin-bottom: 2px; opacity: 0.9; }
+    .prop-row {
+      display: grid; grid-template-columns: 90px 1fr 48px; gap: 6px; align-items: center;
+      margin-bottom: 8px; font-size: 12px;
+    }
+    .prop-row input[type="range"] { width: 100%; }
+    .prop-row input[type="number"] {
+      width: 100%; background: #111; color: #eee; border: 1px solid #333;
+      border-radius: 6px; padding: 4px;
+    }
+    .sel-hint { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+
+
+    @media (min-width: 900px) {
+      #dock {
+        width: min(380px, 34vw);
+        max-height: none;
+        height: auto;
+        bottom: 0;
+        top: 0;
+        position: relative;
+      }
+      #workspace { top: 132px; }
+      .parts-grid { grid-template-columns: repeat(3, 1fr); }
+      #modebar { justify-content: flex-start; padding-left: 16px; }
+      .mode-btn { font-size: 13px; padding: 8px 16px; }
+    }
+    @media (min-width: 1200px) {
+      #dock { width: 400px; }
+      .parts-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+
+    #welcome {
+      position: absolute; inset: 0; z-index: 50; background: rgba(8,12,18,0.92);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    #welcome .panel {
+      max-width: 420px; background: #141a22; border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; color: var(--text);
+    }
+    #welcome h2 { margin: 0 0 8px; font-size: 22px; }
+    #welcome p { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0 0 16px; }
+    #welcome .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    #welcome .actions button { flex: 1; min-width: 120px; }
+    .health-box {
+      background: #0f172a; border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px; margin-top: 8px; font-size: 12px;
+    }
+    .health-box .grade { font-size: 28px; font-weight: 700; color: var(--accent); }
+    .issue { padding: 4px 0; border-bottom: 1px solid #1e293b; }
+    .issue.err { color: #f87171; }
+    .issue.warn { color: #fbbf24; }
+
+  </style>
+
+  <script>
+  (function(){
+    function probe(){
+      var pill = document.getElementById('conn-pill');
+      if(!pill) return;
+      var urls = ['ws://127.0.0.1:8766','ws://localhost:8766'];
+      var i = 0;
+      function tryOne(){
+        if(i>=urls.length){ pill.textContent='Offline'; pill.className='pill off'; return; }
+        var u = urls[i++];
+        pill.textContent='Connecting…';
+        var s;
+        try { s = new WebSocket(u); } catch(e){ tryOne(); return; }
+        var done=false;
+        s.onopen=function(){ done=true; pill.textContent='Connected'; pill.className='pill'; try{s.send(JSON.stringify({action:'health'}));}catch(e){} };
+        s.onerror=function(){ if(!done){ try{s.close();}catch(e){} tryOne(); } };
+        s.onclose=function(){ if(!done && pill.textContent!=='Connected'){ /* module may own reconnect */ } };
+        // hand off: do not close if open — module connect will open its own
+        setTimeout(function(){ if(!done){ try{s.close();}catch(e){} tryOne(); } }, 2500);
+      }
+      tryOne();
+      pill.style.cursor='pointer';
+      pill.onclick=function(){ i=0; tryOne(); };
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', probe);
+    else probe();
+  })();
+  </script>
+
+</head>
+<body>
+  
+  <div id="welcome" style="display:none;">
+    <div class="panel">
+      <h2>Welcome to Vortexa Studio</h2>
+      <p>Design any robot offline — arms, rovers, humanoids, drones. Validate for sim, export to URDF / ROS 2 / MuJoCo / USD (Isaac).</p>
+      <div class="actions">
+        <button class="tb-btn primary" id="welcome-example">Open example</button>
+        <button class="tb-btn" id="welcome-blank">Start blank</button>
+        <button class="tb-btn ghost" id="welcome-dismiss">Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="topbar">
+    <div class="brand">Vortexa <em>Studio</em> <small>v3.5.4</small></div>
+    <div class="spacer"></div>
+    <div id="conn-pill" class="pill off">Offline</div>
+  </div>
+
+  <div id="toolbar">
+    <button class="tb-btn primary" id="btn-gallery">Blueprints</button>
+    <button class="tb-btn" id="btn-new">New Robot</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-fk">Reach Check</button>
+    <button class="tb-btn" id="btn-ik">Move to Target</button>
+    <button class="tb-btn" id="btn-urdf">Export URDF</button>
+    <button class="tb-btn" id="btn-ros2">ROS 2</button>
+    <button class="tb-btn" id="btn-mjcf">MuJoCo</button>
+    <button class="tb-btn" id="btn-usd">USD</button>
+    <button class="tb-btn" id="btn-import">Import URDF</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-traj">Preview Path</button>
+    <button class="tb-btn" id="btn-cart">Cartesian Path</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-save">Save</button>
+    <button class="tb-btn" id="btn-load">Load</button>
+    <button class="tb-btn" id="btn-validate">Validate</button>
+    <button class="tb-btn" id="btn-save-project">Save Project</button>
+    <button class="tb-btn" id="btn-examples">Examples</button>
+    <button class="tb-btn ghost" id="btn-health">Status</button>
+  </div>
+
+  
+  <div id="modebar">
+    <button class="mode-btn active" data-mode="object">Object</button>
+    <button class="mode-btn" data-mode="edit">Edit</button>
+    <button class="mode-btn" data-mode="sculpt">Sculpt</button>
+    <button class="mode-btn" data-mode="animate">Animate</button>
+    <button class="mode-btn" data-mode="control">Control</button>
+  </div>
+
+  <div id="workspace">
+    <div id="viewport">
+      <div class="empty" id="empty-state">
+        <h2>Design any robot</h2>
+        <p>Start from a blueprint or build from scratch. Your robot will appear here.</p>
+      </div>
+    </div>
+
+    <div id="dock">
+      <div class="dock-tabs">
+        <div class="dock-tab active" data-tab="library">TexaKit</div>
+        <div class="dock-tab" data-tab="build">Build</div>
+        <div class="dock-tab" data-tab="edit">Edit</div>
+        <div class="dock-tab" data-tab="sculpt">Sculpt</div>
+        <div class="dock-tab" data-tab="animate">Animate</div>
+        <div class="dock-tab" data-tab="joints">Joints</div>
+        <div class="dock-tab" data-tab="control">Control</div>
+        <div class="dock-tab" data-tab="status">Status</div>
+      </div>
+
+      <div class="dock-body" id="tab-library">
+        <div class="section-title">TexaKit Dashboard</div>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 10px;">Asset library for modeling, testing, and command. Pick a blueprint or build your own.</p>
+        <div class="section-title">Blueprints</div>
+        <div class="card active" data-template="articulated_arm">
+          <h4>6-DoF Industrial Arm</h4>
+          <p>Classic serial manipulator for pick-and-place research.</p>
+          <span class="tag">Manipulator · 6-DoF</span>
+        </div>
+        <div class="card" data-template="production_cell_arm">
+          <h4>Production Cell Arm</h4>
+          <p>Long-reach 6-DoF for assembly lines.</p>
+          <span class="tag">Production · 6-DoF</span>
+        </div>
+        <div class="card" data-template="scara_arm">
+          <h4>SCARA Research Arm</h4>
+          <p>Horizontal assembly · prismatic Z.</p>
+          <span class="tag">Research · 4-DoF</span>
+        </div>
+        <div class="card" data-template="humanoid_torso_arm">
+          <h4>Humanoid Arm + Torso</h4>
+          <p>Upper-body research humanoid foundation.</p>
+          <span class="tag">Humanoid · 6-DoF</span>
+        </div>
+        <div class="card" data-template="dual_arm_humanoid">
+          <h4>Dual-Arm Humanoid</h4>
+          <p>Torso + left &amp; right 6-DoF arms. Switch active chain.</p>
+          <span class="tag">Humanoid · 12-DoF</span>
+        </div>
+        <div class="card" data-template="hexapod_walker">
+          <h4>Hexapod Walker</h4>
+          <p>Six 3-DoF legs. Select leg chain for IK.</p>
+          <span class="tag">Mobility · 18-DoF</span>
+        </div>
+        <div class="card" data-template="mobile_manipulator">
+          <h4>Mobile Manipulator</h4>
+          <p>Wheeled base + arm for warehouse labs.</p>
+          <span class="tag">Mobility · 5-DoF</span>
+        </div>
+        <div class="card" data-template="hexapod_leg">
+          <h4>Hexapod Leg Module</h4>
+          <p>3-DoF leg building block for walkers.</p>
+          <span class="tag">Mobility · 3-DoF</span>
+        </div>
+        <div class="card" data-template="differential_rover">
+          <h4>4WD Differential Rover</h4>
+          <p>Simple mobile base for learning.</p>
+          <span class="tag">Mobility · Beginner</span>
+        </div>
+        <div class="card" data-template="quadrotor_frame">
+          <h4>Quadrotor Research Frame</h4>
+          <p>X-frame with controllable props (kinematic).</p>
+          <span class="tag">Aerial · 4-DoF</span>
+        </div>
+        <div class="card" data-template="blank" style="border-style:dashed;">
+          <h4>Start from Scratch</h4>
+          <p>Empty canvas. Full creative freedom.</p>
+          <span class="tag">Custom · TexaKit</span>
+        </div>
+        <div class="section-title">End Effectors</div>
+        <div class="chips" id="ee-chips">
+          <div class="chip" data-ee="parallel_gripper">Gripper</div>
+          <div class="chip" data-ee="vacuum_cup">Vacuum</div>
+          <div class="chip" data-ee="tool_flange">Flange</div>
+          <div class="chip" data-ee="camera_mount">Camera</div>
+        </div>
+        <div class="section-title">Materials</div>
+        <div class="chips">
+          <div class="chip active" data-mat="aluminum">Aluminum</div>
+          <div class="chip" data-mat="carbon">Carbon</div>
+          <div class="chip" data-mat="titanium">Titanium</div>
+          <div class="chip" data-mat="plastic">Plastic</div>
+          <div class="chip" data-mat="steel">Steel</div>
+        </div>
+      </div>
+
+      <div class="dock-body" id="tab-build" style="display:none;">
+        <div class="section-title">Parts Library</div>
+        <p class="sel-hint">Build from scratch — structure, joints, wheels, sensors, power, tools.</p>
+        <div id="parts-library"></div>
+        <div class="section-title">Materials</div>
+        <div class="chips" id="mat-chips-build">
+          <div class="chip active" data-mat="aluminum">Aluminum</div>
+          <div class="chip" data-mat="carbon">Carbon</div>
+          <div class="chip" data-mat="titanium">Titanium</div>
+          <div class="chip" data-mat="plastic">Plastic</div>
+          <div class="chip" data-mat="steel">Steel</div>
+          <div class="chip" data-mat="abs">ABS</div>
+        </div>
+        <div class="section-title">Current Robot</div>
+        <div id="link-list" style="font-size:12px;color:var(--muted);">Load or create a robot to see parts.</div>
+      </div>
+
+      <div class="dock-body" id="tab-edit" style="display:none;">
+        <div class="section-title">Edit Part</div>
+        <p class="sel-hint" id="edit-sel-hint">Select a part in the list below to edit name, type, and limits.</p>
+        <div id="edit-props">
+          <div class="prop-row"><span>Name</span><input id="edit-name" type="text" style="grid-column:span 2"></div>
+          <div class="prop-row"><span>Type</span>
+            <select id="edit-type" style="grid-column:span 2;background:#111;color:#eee;border:1px solid #333;border-radius:6px;padding:4px;">
+              <option value="fixed">fixed</option>
+              <option value="revolute">revolute</option>
+              <option value="continuous">continuous</option>
+              <option value="prismatic">prismatic</option>
+            </select>
+          </div>
+          <div class="prop-row"><span>Axis</span>
+            <select id="edit-axis" style="grid-column:span 2;background:#111;color:#eee;border:1px solid #333;border-radius:6px;padding:4px;">
+              <option value="x">X</option><option value="y">Y</option><option value="z" selected>Z</option>
+            </select>
+          </div>
+          <div class="prop-row"><span>Mass (kg)</span><input id="edit-mass" type="number" step="0.01" min="0.01" style="grid-column:span 2"></div>
+          <button class="tb-btn" id="btn-apply-edit" style="width:100%;margin-top:8px;">Apply to Part</button>
+          <button class="tb-btn ghost" id="btn-delete-part" style="width:100%;margin-top:6px;">Delete Part</button>
+        </div>
+        <div class="section-title">Parts</div>
+        <div id="edit-link-list" style="font-size:12px;color:var(--muted);"></div>
+      </div>
+
+      <div class="dock-body" id="tab-sculpt" style="display:none;">
+        <div class="section-title">Sculpt Geometry</div>
+        <p class="sel-hint">Tweak length and radius of the selected part — live in the viewport.</p>
+        <div class="prop-row"><span>Length</span><input id="sculpt-len" type="range" min="0.03" max="0.8" step="0.01" value="0.3"><span id="sculpt-len-v">0.30</span></div>
+        <div class="prop-row"><span>Radius</span><input id="sculpt-rad" type="range" min="0.01" max="0.2" step="0.005" value="0.04"><span id="sculpt-rad-v">0.04</span></div>
+        <button class="tb-btn" id="btn-sculpt-apply" style="width:100%;margin-top:8px;">Rebuild Mesh</button>
+        <div class="section-title">Selected</div>
+        <div id="sculpt-sel" style="font-size:12px;color:var(--muted);">None — pick a part in Edit or list.</div>
+      </div>
+
+      <div class="dock-body" id="tab-animate" style="display:none;">
+        <div class="section-title">Animate</div>
+        <p class="sel-hint">Capture poses, build sequences, preview motion — offline on this device.</p>
+        <div class="chips" style="margin-bottom:8px;">
+          <button class="chip" id="anim-add-target">Add Keyframe</button>
+          <button class="chip" id="anim-play">Play</button>
+          <button class="chip" id="anim-save">Save Clip</button>
+          <button class="chip" id="anim-list">Clips</button>
+        </div>
+        <div class="section-title">Pose Presets</div>
+        <div id="anim-presets" class="chips" style="margin-bottom:8px;"></div>
+        <div class="section-title">Dual-arm</div>
+        <p class="sel-hint">Solve IK on active chain, then mirror/offset to the other arm.</p>
+        <button class="tb-btn" id="btn-dual-ik" style="width:100%;margin-bottom:8px;">IK active · offset other arm</button>
+        <div class="section-title">Trajectory</div>
+        <button class="tb-btn" id="anim-traj-csv" style="width:100%;">Export Trajectory CSV</button>
+        <p style="font-size:11px;color:var(--muted);margin-top:6px;">Keyframes: <span id="anim-kf-count">0</span></p>
+      </div>
+
+      <div class="dock-body" id="tab-joints" style="display:none;">
+        <div class="section-title">Joint Controls</div>
+        <div id="joint-sliders"></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px;">Drag to pose your robot. Changes are live.</p>
+      </div>
+
+      <div class="dock-body" id="tab-control" style="display:none;">
+        <div class="section-title">Active Chain</div>
+        <div id="chain-select" class="chips" style="margin-bottom:10px;"></div>
+        <div class="section-title">Tool Frame (TCP)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;font-size:11px;">
+          <label>X <input id="tcp-x" type="number" step="0.01" value="0" style="width:100%;background:#111;color:#eee;border:1px solid #333;border-radius:6px;padding:4px;"></label>
+          <label>Y <input id="tcp-y" type="number" step="0.01" value="0" style="width:100%;background:#111;color:#eee;border:1px solid #333;border-radius:6px;padding:4px;"></label>
+          <label>Z <input id="tcp-z" type="number" step="0.01" value="0.05" style="width:100%;background:#111;color:#eee;border:1px solid #333;border-radius:6px;padding:4px;"></label>
+        </div>
+        <button class="tb-btn" id="btn-tcp" style="margin-bottom:10px;">Apply TCP</button>
+        <div class="section-title">Command &amp; Control</div>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 10px;">Drive your creation. Home, stow, jog, or hold pose.</p>
+        <div class="builder-grid">
+          <div class="builder-btn" id="cmd-home"><span class="icon">⌂</span>Home</div>
+          <div class="builder-btn" id="cmd-stow"><span class="icon">⬇</span>Stow</div>
+          <div class="builder-btn" id="cmd-hold"><span class="icon">■</span>Hold</div>
+          <div class="builder-btn" id="cmd-stop"><span class="icon">✕</span>Stop</div>
+        </div>
+        <div class="section-title">Cartesian Jog</div>
+        <div class="builder-grid">
+          <div class="builder-btn" id="jog-x+">+X</div>
+          <div class="builder-btn" id="jog-x-">−X</div>
+          <div class="builder-btn" id="jog-y+">+Y</div>
+          <div class="builder-btn" id="jog-y-">−Y</div>
+          <div class="builder-btn" id="jog-z+">+Z</div>
+          <div class="builder-btn" id="jog-z-">−Z</div>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px;">Jog 2 cm steps · presets snap whole pose · collision shows risk spheres.</p>
+        <div class="section-title">Pose Presets</div>
+        <div id="pose-presets" class="chips" style="margin-bottom:10px;"></div>
+        <button class="tb-btn" id="btn-collision" style="margin-bottom:10px;">Collision Check</button>
+        <button class="chip preset-chip" data-preset="handoff">Handoff</button>
+        <div class="section-title">Motion Program</div>
+        <div class="chips" style="margin-bottom:8px;">
+          <button class="chip" id="btn-add-target">Add Target</button>
+          <button class="chip" id="btn-save-motion">Save Sequence</button>
+          <button class="chip" id="btn-list-motion">List Motions</button>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 10px;">Capture joint poses as waypoints. Sequences stay on this device.</p>
+        <div class="section-title">Dual-arm</div>
+        <p class="sel-hint">Solve IK on active chain, then mirror/offset to the other arm.</p>
+        <button class="tb-btn" id="btn-dual-ik" style="width:100%;margin-bottom:8px;">IK active · offset other arm</button>
+        <div class="section-title">Trajectory</div>
+        <button class="tb-btn" id="btn-traj-csv">Export Trajectory CSV</button>
+        <p style="font-size:11px;color:var(--muted);margin-top:6px;">Writes joint timeseries after Cartesian Path (ROS bag-friendly).</p>
+      </div>
+
+      <div class="dock-body" id="tab-status" style="display:none;">
+        <div id="friendly-status">
+          <div class="status-card">
+            <div class="headline">TexaKit ready</div>
+            <div class="sub">Connected — pick a blueprint or build from scratch.</div>
+          </div>
+        </div>
+        <div class="section-title">Sim-Ready Health</div>
+        <div id="health-report" class="health-box">Run <b>Validate</b> to score this robot for Gazebo / MuJoCo / Isaac.</div>
+        <button class="tb-btn" id="btn-enrich" style="width:100%;margin-top:8px;">Auto-fill mass · inertia · limits</button>
+        <div class="section-title">Scene objects</div>
+        <p class="sel-hint">Add simple obstacles for reach context (table / box).</p>
+        <div class="chips">
+          <button class="chip" id="scene-table">+ Table</button>
+          <button class="chip" id="scene-box">+ Box</button>
+          <button class="chip" id="scene-clear">Clear scene</button>
+        </div>
+        <div class="section-title">Mesh on selected part</div>
+        <p class="sel-hint">Attach STL/OBJ as a visual hint (collision stays simple).</p>
+        <input type="file" id="mesh-file" accept=".stl,.obj,.STL,.OBJ" style="font-size:12px;width:100%;margin-bottom:8px;">
+        <div class="section-title">Projects</div>
+        <div id="project-list" style="font-size:12px;color:var(--muted);">Save a project or open an example.</div>
+      </div>
+    </div>
+  </div>
+
+<script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three/three.module.js",
+      "three/addons/": "./vendor/three/addons/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from './vendor/three/three.module.js';
+    import { OrbitControls } from './vendor/three/addons/controls/OrbitControls.js';
+    console.log('[Vortexa] module loaded');
+
+    let ws = null, topology = [], jointAngles = [], robotGroup = null;
+    let tcpOffset = { xyz: [0, 0, 0.05], rpy: [0, 0, 0] };
+    let activeChain = null;
+    let chainList = [];
+    let currentTemplateId = 'articulated_arm';
+    let lastJointPath = [];
+    let robotMeta = {};
+    let allChains = null;
+    let chainOrigins = {};
+    let chainPivotsMap = {};
+    let collisionGroup = null;
+    let availablePresets = {};
+    let jointPivots = [];
+    let currentMat = 'aluminum';
+    const matColors = { aluminum: 0x9ca3af, carbon: 0x1f2937, titanium: 0x94a3b8, plastic: 0xf59e0b, steel: 0x6b7280, abs: 0x38bdf8 };
+    let selectedPartIdx = -1;
+    let partsCatalog = null;
+    let targetMesh = null;
+    let tcpHelper = null;
+    let trajAnimating = false;
+    let targetPos = [0.4, 0.0, 0.55];
+
+    const pill = document.getElementById('conn-pill');
+    const emptyState = document.getElementById('empty-state');
+    const jointSliders = document.getElementById('joint-sliders');
+    const linkList = document.getElementById('link-list');
+    const friendlyStatus = document.getElementById('friendly-status');
+    const viewport = document.getElementById('viewport');
+
+    document.querySelectorAll('.dock-tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.dock-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.dock-body').forEach(b => b.style.display = 'none');
+        tab.classList.add('active');
+        const tb = document.getElementById('tab-' + tab.dataset.tab); if (tb) tb.style.display = 'block';
+      };
+    });
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0d0d0d);
+    scene.fog = new THREE.Fog(0x0d0d0d, 10, 22);
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.01, 50);
+    camera.position.set(1.8, 1.3, 2.0);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    viewport.appendChild(renderer.domElement);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 0.6, 0);
+    controls.enableDamping = true;
+    scene.add(new THREE.GridHelper(5, 50, 0x333333, 0x222222));
+    scene.add(new THREE.AxesHelper(0.4));
+    scene.add(new THREE.AmbientLight(0x606060, 1.2));
+    const d1 = new THREE.DirectionalLight(0xffffff, 1.2); d1.position.set(3,5,2); scene.add(d1);
+
+    function resize() {
+      const w = viewport.clientWidth, h = viewport.clientHeight;
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+      renderer.setSize(w, h, false);
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function buildRobotVisual(topo) {
+      if (allChains && typeof allChains === 'object' && Object.keys(allChains).length > 1) {
+        buildMultiChainVisual();
+        return;
+      }
+      buildSerialChainVisual(topo);
+    }
+
+    function clearRobotGroup() {
+      if (robotGroup) scene.remove(robotGroup);
+      robotGroup = new THREE.Group();
+      jointPivots = [];
+      chainPivotsMap = {};
+      partPivotList = [];
+    }
+
+    function makeLinkMeshes(link, isRootFixed, col, dimmed) {
+      const len = Math.max(0.05, link.length || 0.3);
+      const rad = Math.max(0.018, link.radius || 0.05);
+      const isFixed = link.type === 'fixed';
+      const kind = (link.kind || link.part_id || '').toLowerCase();
+      const pivot = new THREE.Object3D();
+      const mats = [];
+      const mp = (color, metal, rough) => {
+        const m = new THREE.MeshStandardMaterial({
+          color, metalness: metal, roughness: rough,
+          transparent: !!dimmed, opacity: dimmed ? 0.38 : 1.0,
+          emissive: 0x000000, emissiveIntensity: 0
+        });
+        mats.push(m);
+        return m;
+      };
+      const add = (mesh) => { pivot.add(mesh); return mesh; };
+
+      if (isFixed && isRootFixed) {
+        const pedestal = add(new THREE.Mesh(
+          new THREE.CylinderGeometry(rad * 1.6, rad * 1.9, Math.max(len, 0.12), 32),
+          mp(0x1f2937, 0.6, 0.35)
+        ));
+        pedestal.rotation.x = Math.PI / 2;
+        pedestal.position.z = Math.max(len, 0.12) / 2;
+        const plate = add(new THREE.Mesh(
+          new THREE.CylinderGeometry(rad * 2.2, rad * 2.2, 0.03, 32),
+          mp(0x111827, 0.5, 0.4)
+        ));
+        plate.rotation.x = Math.PI / 2;
+        plate.position.z = 0.015;
+      } else if (kind.includes('wheel') || kind.includes('caster') || kind === 'wheel_diff' || kind === 'wheel_omni') {
+        const tire = add(new THREE.Mesh(
+          new THREE.TorusGeometry(rad, rad * 0.35, 12, 24),
+          mp(0x1f2937, 0.2, 0.7)
+        ));
+        tire.rotation.y = Math.PI / 2;
+        tire.position.z = len / 2;
+        const hub = add(new THREE.Mesh(
+          new THREE.CylinderGeometry(rad * 0.35, rad * 0.35, rad * 0.5, 16),
+          mp(0xd1d5db, 0.8, 0.25)
+        ));
+        hub.rotation.z = Math.PI / 2;
+        hub.position.z = len / 2;
+      } else if (kind.includes('torso') || kind.includes('shell') || kind === 'torso_shell') {
+        const body = add(new THREE.Mesh(
+          new THREE.SphereGeometry(rad * 1.1, 24, 18),
+          mp(col, 0.55, 0.35)
+        ));
+        body.scale.set(1, 1, Math.max(len / (rad * 1.1), 1.2));
+        body.position.z = len / 2;
+        add(new THREE.Mesh(
+          new THREE.SphereGeometry(rad * 0.55, 16, 12),
+          mp(0xf59e0b, 0.85, 0.22)
+        ));
+      } else if (kind.includes('sensor') || kind.includes('camera') || kind.includes('imu') || kind.includes('lidar') || link.sensor) {
+        const box = add(new THREE.Mesh(
+          new THREE.BoxGeometry(rad * 1.6, rad * 1.2, len),
+          mp(0x111827, 0.4, 0.45)
+        ));
+        box.position.z = len / 2;
+        const lens = add(new THREE.Mesh(
+          new THREE.SphereGeometry(rad * 0.45, 12, 12),
+          mp(0x38bdf8, 0.9, 0.15)
+        ));
+        lens.position.set(0, rad * 0.2, len * 0.75);
+      } else if (kind.includes('battery') || kind.includes('power') || kind.includes('pdu') || kind.includes('mcu') || kind.includes('sbc') || kind.includes('driver')) {
+        const pack = add(new THREE.Mesh(
+          new THREE.BoxGeometry(rad * 2.2, rad * 1.2, len),
+          mp(kind.includes('battery') ? 0x166534 : 0x1e3a5f, 0.35, 0.5)
+        ));
+        pack.position.z = len / 2;
+      } else if (kind.includes('gripper') || kind.includes('vacuum') || kind.includes('flange') || kind.includes('magnetic') || kind.includes('torch')) {
+        add(new THREE.Mesh(
+          new THREE.SphereGeometry(rad * 1.1, 16, 16),
+          mp(0xf59e0b, 0.85, 0.22)
+        ));
+        const palm = add(new THREE.Mesh(
+          new THREE.BoxGeometry(rad * 1.8, rad * 0.5, len * 0.5),
+          mp(col, 0.6, 0.35)
+        ));
+        palm.position.z = len * 0.35;
+        if (kind.includes('gripper') || kind.includes('parallel')) {
+          for (const s of [-1, 1]) {
+            const finger = add(new THREE.Mesh(
+              new THREE.BoxGeometry(rad * 0.35, rad * 0.25, len * 0.55),
+              mp(0x9ca3af, 0.7, 0.3)
+            ));
+            finger.position.set(s * rad * 0.7, 0, len * 0.7);
+          }
+        }
+      } else if (kind.includes('prop') || kind.includes('rotor')) {
+        const arm = add(new THREE.Mesh(
+          new THREE.CylinderGeometry(rad * 0.5, rad * 0.5, len, 10),
+          mp(col, 0.5, 0.4)
+        ));
+        arm.rotation.x = Math.PI / 2;
+        arm.position.z = len / 2;
+        const hub = add(new THREE.Mesh(
+          new THREE.CylinderGeometry(rad * 1.2, rad * 1.2, rad * 0.4, 16),
+          mp(0x111827, 0.6, 0.35)
+        ));
+        hub.position.z = len;
+      } else {
+        // Default joint + link tube
+        add(new THREE.Mesh(
+          new THREE.SphereGeometry(rad * 1.35, 20, 20),
+          mp(isFixed ? 0x4b5563 : (dimmed ? 0x92400e : 0xf59e0b), 0.85, 0.22)
+        ));
+        const geo = new THREE.CylinderGeometry(rad * 0.75, rad * 0.95, len, 22);
+        geo.rotateX(Math.PI / 2);
+        geo.translate(0, 0, len / 2);
+        add(new THREE.Mesh(geo, mp(isFixed ? 0x374151 : (dimmed ? 0x64748b : col), 0.72, 0.28)));
+      }
+      const nextAnchor = new THREE.Object3D();
+      nextAnchor.position.z = len;
+      pivot.add(nextAnchor);
+      pivot.userData.partMats = mats;
+      return {
+        pivot, nextAnchor, isFixed, mats,
+        axis: (link.axis || 'z').toLowerCase(),
+        type: link.type || 'revolute'
+      };
+    }
+
+    let partPivotList = [];
+    function buildSerialInto(parentRoot, links, col, dimmed, trackActive, indexOffset) {
+      let parent = parentRoot;
+      const pivots = [];
+      let movableIndex = 0;
+      const off = indexOffset || 0;
+      (links || []).forEach((link, i) => {
+        const isRootFixed = (i === 0 && link.type === 'fixed' && off === 0);
+        const built = makeLinkMeshes(link, isRootFixed, col, dimmed);
+        built.pivot.userData.partIndex = off + i;
+        parent.add(built.pivot);
+        partPivotList.push({ pivot: built.pivot, mats: built.mats || [], index: off + i });
+        if (!built.isFixed && trackActive) {
+          pivots.push({ pivot: built.pivot, axis: built.axis, type: built.type, index: movableIndex });
+          movableIndex++;
+        }
+        parent = built.nextAnchor;
+      });
+      return { endParent: parent, pivots };
+    }
+
+    function highlightSelectedPart() {
+      partPivotList.forEach(entry => {
+        const on = entry.index === selectedPartIdx;
+        (entry.mats || []).forEach(m => {
+          if (!m) return;
+          m.emissive = new THREE.Color(on ? 0x3b82f6 : 0x000000);
+          m.emissiveIntensity = on ? 0.45 : 0;
+        });
+      });
+    }
+
+    function applyOrigin(group, origin) {
+      if (!origin) return;
+      const xyz = origin.xyz || [0, 0, 0];
+      const rpy = origin.rpy || [0, 0, 0];
+      group.position.set(xyz[0], xyz[1], xyz[2]);
+      group.rotation.set(rpy[0], rpy[1], rpy[2]);
+    }
+
+    function attachTcp(endParent) {
+      if (tcpHelper) {
+        try { if (tcpHelper.parent) tcpHelper.parent.remove(tcpHelper); } catch (e) {}
+      }
+      tcpHelper = new THREE.Group();
+      tcpHelper.add(new THREE.AxesHelper(0.12));
+      const tip = new THREE.Mesh(
+        new THREE.ConeGeometry(0.025, 0.06, 16),
+        new THREE.MeshStandardMaterial({ color: 0x22c55e, metalness: 0.3, roughness: 0.4 })
+      );
+      tip.rotation.x = -Math.PI / 2;
+      tip.position.z = 0.03;
+      tcpHelper.add(tip);
+      endParent.add(tcpHelper);
+    }
+
+    function buildMultiChainVisual() {
+      clearRobotGroup();
+      const col = matColors[currentMat] || 0x4a7ec7;
+      const bodyKey = allChains.torso ? 'torso' : (allChains.body ? 'body' : null);
+      let attachRoot = robotGroup;
+      if (bodyKey && allChains[bodyKey]) {
+        const bodyGroup = new THREE.Group();
+        applyOrigin(bodyGroup, chainOrigins[bodyKey]);
+        robotGroup.add(bodyGroup);
+        buildSerialInto(bodyGroup, allChains[bodyKey], col, false, false);
+        attachRoot = bodyGroup;
+      }
+      Object.keys(allChains).forEach(name => {
+        if (name === bodyKey) return;
+        const isActive = (name === activeChain);
+        const chainGroup = new THREE.Group();
+        applyOrigin(chainGroup, chainOrigins[name]);
+        attachRoot.add(chainGroup);
+        const result = buildSerialInto(chainGroup, allChains[name], col, !isActive, isActive);
+        chainPivotsMap[name] = result.pivots;
+        if (isActive) {
+          jointPivots = result.pivots;
+          attachTcp(result.endParent);
+        }
+      });
+      robotGroup.rotation.x = -Math.PI / 2;
+      scene.add(robotGroup);
+      if (emptyState) emptyState.style.display = 'none';
+      ensureTargetMesh();
+      applyJointAngles();
+      highlightSelectedPart();
+      frameRobot();
+    }
+
+    function buildSerialChainVisual(topo) {
+      clearRobotGroup();
+      const col = matColors[currentMat] || 0x4a7ec7;
+      const result = buildSerialInto(robotGroup, topo || [], col, false, true);
+      jointPivots = result.pivots;
+      attachTcp(result.endParent);
+      robotGroup.rotation.x = -Math.PI / 2;
+      scene.add(robotGroup);
+      if (emptyState) emptyState.style.display = (topo && topo.length) ? 'none' : 'flex';
+      ensureTargetMesh();
+      applyJointAngles();
+      highlightSelectedPart();
+      frameRobot();
+    }
+
+    function robotToWorld(p) {
+      // Chain built in Z-up; robotGroup.rotation.x = -PI/2 maps to Y-up
+      return [p[0], p[2], -p[1]];
+    }
+    function worldToRobot(w) {
+      return [w[0], -w[2], w[1]];
+    }
+    function ensureTargetMesh() {
+      if (!targetMesh) {
+        targetMesh = new THREE.Group();
+        const core = new THREE.Mesh(
+          new THREE.SphereGeometry(0.028, 24, 24),
+          new THREE.MeshStandardMaterial({ color: 0xf43f5e, metalness: 0.35, roughness: 0.25, emissive: 0x4c0519, emissiveIntensity: 0.35 })
+        );
+        targetMesh.add(core);
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(0.055, 0.005, 12, 48),
+          new THREE.MeshBasicMaterial({ color: 0xfb7185 })
+        );
+        ring.rotation.x = Math.PI / 2;
+        targetMesh.add(ring);
+        // RGB axes for clear target frame
+        const axisMat = (c) => new THREE.MeshBasicMaterial({ color: c });
+        const mkAxis = (c, dir) => {
+          const g = new THREE.CylinderGeometry(0.004, 0.004, 0.12, 8);
+          const m = new THREE.Mesh(g, axisMat(c));
+          if (dir === 'x') { m.rotation.z = -Math.PI/2; m.position.x = 0.06; }
+          if (dir === 'y') { m.position.y = 0.06; }
+          if (dir === 'z') { m.rotation.x = Math.PI/2; m.position.z = 0.06; }
+          return m;
+        };
+        targetMesh.add(mkAxis(0xef4444, 'x'));
+        targetMesh.add(mkAxis(0x22c55e, 'y'));
+        targetMesh.add(mkAxis(0x3b82f6, 'z'));
+        scene.add(targetMesh);
+      }
+      const w = robotToWorld(targetPos);
+      targetMesh.position.set(w[0], w[1], w[2]);
+    }
+
+    function applyJointAngles(angles) {
+      if (Array.isArray(angles)) jointAngles = angles.slice();
+      jointPivots.forEach((jp) => {
+        const angle = Number(jointAngles[jp.index]) || 0;
+        // Keep hierarchical position; only drive joint DOF
+        if (jp.type === 'prismatic') {
+          jp.pivot.rotation.set(0, 0, 0);
+          const s = angle * 0.15;
+          jp.pivot.position.set(
+            jp.axis === 'x' ? s : 0,
+            jp.axis === 'y' ? s : 0,
+            jp.axis === 'z' ? s : 0
+          );
+        } else {
+          jp.pivot.position.set(0, 0, 0);
+          jp.pivot.rotation.set(
+            jp.axis === 'x' ? angle : 0,
+            jp.axis === 'y' ? angle : 0,
+            jp.axis === 'z' ? angle : 0
+          );
+        }
+      });
+    }
+
+    function frameRobot() {
+      // Fit camera to current robot size so short legs / tall arms both read clearly
+      let reach = 0.8;
+      const src = (allChains && activeChain && allChains[activeChain]) ? allChains[activeChain] : topology;
+      (src || []).forEach(l => { reach += Number(l.length) || 0; });
+      reach = Math.max(0.5, Math.min(reach, 3.5));
+      const d = reach * 1.6;
+      camera.position.set(d * 0.9, d * 0.7, d * 1.05);
+      controls.target.set(0, reach * 0.35, 0);
+      controls.update();
+    }
+
+    function playJointPath(path, durationMs) {
+      if (!path || path.length < 2 || trajAnimating) return;
+      trajAnimating = true;
+      const t0 = performance.now();
+      function step(now) {
+        const u = Math.min(1, (now - t0) / durationMs);
+        const f = u * (path.length - 1);
+        const i = Math.floor(f);
+        const frac = f - i;
+        const a = path[i];
+        const b = path[Math.min(i + 1, path.length - 1)];
+        for (let j = 0; j < a.length; j++) {
+          jointAngles[j] = a[j] + ((b[j] || 0) - a[j]) * frac;
+        }
+        jointSliders.querySelectorAll('input').forEach((inp, idx) => {
+          if (jointAngles[idx] !== undefined) {
+            inp.value = jointAngles[idx];
+            const valEl = inp.parentElement.querySelector('.val');
+            if (valEl) valEl.textContent = Number(jointAngles[idx]).toFixed(2);
+          }
+        });
+        applyJointAngles();
+        if (u < 1) requestAnimationFrame(step);
+        else trajAnimating = false;
+      }
+      requestAnimationFrame(step);
+    }
+
+    function animateTrajectory(fromAngles, toAngles, durationMs, onDone) {
+      if (trajAnimating) return;
+      trajAnimating = true;
+      const t0 = performance.now();
+      const from = fromAngles.slice();
+      const to = toAngles.slice();
+      function step(now) {
+        const u = Math.min(1, (now - t0) / durationMs);
+        // smoothstep
+        const s = u * u * (3 - 2 * u);
+        for (let i = 0; i < to.length; i++) {
+          const a = from[i] || 0;
+          const b = to[i] || 0;
+          jointAngles[i] = a + (b - a) * s;
+        }
+        // sync sliders
+        jointSliders.querySelectorAll('input').forEach((inp, i) => {
+          if (jointAngles[i] !== undefined) {
+            inp.value = jointAngles[i];
+            const valEl = inp.parentElement.querySelector('.val');
+            if (valEl) valEl.textContent = Number(jointAngles[i]).toFixed(2);
+          }
+        });
+        applyJointAngles();
+        if (u < 1) requestAnimationFrame(step);
+        else { trajAnimating = false; if (onDone) onDone(); }
+      }
+      requestAnimationFrame(step);
+    }
+
+
+    function showStatus(headline, sub, type = '', metrics = null) {
+      let html = '<div class="status-card ' + type + '"><div class="headline">' + headline + '</div><div class="sub">' + sub + '</div>';
+      if (metrics) {
+        html += '<div class="metric-row">';
+        for (const [lbl, num] of Object.entries(metrics)) {
+          html += '<div class="metric"><div class="num">' + num + '</div><div class="lbl">' + lbl + '</div></div>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+      friendlyStatus.innerHTML = html;
+      if (type === 'success' || type === 'warn') document.querySelector('[data-tab="status"]').click();
+    }
+
+    function humanizeResponse(data) {
+      if (!data || data.status === 'error') {
+        showStatus('Something went wrong', data?.message || 'Please try again.', 'warn');
+        return;
+      }
+      switch (data.action) {
+        case 'load_template': {
+          const n = (data.topology || []).length;
+          const dof = (data.topology || []).filter(l => l.type !== 'fixed').length;
+          showStatus('Loaded: ' + (data.template_name || 'Robot'),
+            'You now have a robot with ' + n + ' parts and ' + dof + ' moving joints. Drag the joint sliders to pose it.',
+            'success', { 'Parts': n, 'Joints': dof });
+          break;
+        }
+        case 'compute_fk': {
+          const p = data.end_effector_position || [0,0,0];
+          const man = data.manipulability != null ? Number(data.manipulability).toExponential(2) : '—';
+          const smin = data.sigma_min != null ? Number(data.sigma_min).toExponential(2) : '—';
+          const sing = data.near_singularity;
+          const type = sing ? 'warn' : 'success';
+          const note = sing
+            ? ' Near singularity — small motions may need large joint rates.'
+            : ' Workspace conditioning looks healthy.';
+          showStatus(sing ? 'Reach check · singularity caution' : 'Reach check complete',
+            'EE X:' + p[0].toFixed(3) + ' Y:' + p[1].toFixed(3) + ' Z:' + p[2].toFixed(3) + ' m · μ=' + man + ' · σ_min=' + smin + '.' + note,
+            type, { 'X': p[0].toFixed(3), 'Y': p[1].toFixed(3), 'Z': p[2].toFixed(3), 'μ': man });
+          break;
+        }
+        case 'compute_ik': {
+          const res = data.residual != null ? Number(data.residual).toFixed(5) : '?';
+          const man = data.manipulability != null ? Number(data.manipulability).toExponential(2) : '—';
+          const ok = data.success !== false && Number(data.residual || 0) < 0.01;
+          const sing = data.near_singularity;
+          let msg = 'Residual ' + res + ' m · μ=' + man + ' · iters ' + (data.iterations || '—');
+          if (ok) msg += '. Target reachable.';
+          else msg += '. Closest pose in workspace (target may be too far).';
+          if (sing) msg += ' Near singularity.';
+          showStatus(ok ? (sing ? 'IK solved · singularity caution' : 'IK solved') : 'Closest reachable pose',
+            msg, ok && !sing ? 'success' : 'warn');
+          if (data.joint_angles) {
+            jointAngles = data.joint_angles;
+            jointSliders.querySelectorAll('input').forEach((inp, i) => {
+              if (jointAngles[i] !== undefined) {
+                inp.value = jointAngles[i];
+                const valEl = inp.parentElement.querySelector('.val');
+                if (valEl) valEl.textContent = Number(jointAngles[i]).toFixed(2);
+              }
+            });
+            applyJointAngles();
+          }
+          break;
+        }
+        case 'compile_urdf':
+          showStatus('Robot exported successfully',
+            'Your robot file is ready for Gazebo, Isaac Sim, or manufacturing.', 'success');
+          break;
+
+        case 'command': {
+          if (data.joint_angles) {
+            jointAngles = data.joint_angles.slice();
+            jointSliders.querySelectorAll('input').forEach((inp, i) => {
+              if (jointAngles[i] !== undefined) {
+                inp.value = jointAngles[i];
+                const valEl = inp.parentElement.querySelector('.val');
+                if (valEl) valEl.textContent = Number(jointAngles[i]).toFixed(2);
+              }
+            });
+            applyJointAngles();
+          }
+          showStatus('Command: ' + (data.command || ''),
+            data.message || 'Command executed.',
+            data.success === false ? 'warn' : 'success');
+          break;
+        }
+        case 'kit_catalog': {
+          const n = (data.templates || []).length;
+          showStatus('TexaKit loaded',
+            n + ' blueprints available across humanoid, mobility, production, aerial, and custom.',
+            'success', { 'Blueprints': n });
+          break;
+        }
+        case 'health':
+          showStatus('Vortexa is online',
+            'Version ' + (data.version || '2.1') + '. Research kinematics online. Build freely.', 'success');
+          break;
+        case 'export_ros2':
+          showStatus('ROS 2 package ready',
+            'Package "' + (data.package_name || 'robot_description') + '" generated with URDF, package.xml, CMakeLists, and display launch. Copy into ros2_ws/src.',
+            'success');
+          console.log('ROS 2 package files', data.files);
+          break;
+        case 'export_mjcf':
+          showStatus('MuJoCo MJCF exported',
+            'Model written' + (data.path ? (' to ' + data.path) : '') + '. Load in MuJoCo / mjpython for physics.',
+            'success');
+          console.log('MJCF', data.mjcf ? data.mjcf.slice(0, 200) + '…' : data);
+          break;
+        case 'plan_cartesian':
+          // handled live by button listener; keep friendly fallback
+          showStatus('Cartesian plan',
+            (data.waypoints || '?') + ' waypoints · residual ' + (data.final_residual != null ? Number(data.final_residual).toFixed(5) : '?') + ' m',
+            data.success ? 'success' : 'warn');
+          break;
+        default:
+          showStatus('Done', 'Action completed.', 'success');
+      }
+    }
+
+    const WS_URLS = [
+      'ws://127.0.0.1:8766',
+      'ws://localhost:8766',
+      'ws://127.0.0.1:8765',
+      'ws://localhost:8765'
+    ];
+    let wsIdx = 0;
+    let wsRetryTimer = null;
+    if (pill) {
+      pill.style.cursor = 'pointer';
+      pill.onclick = () => { wsIdx = 0; connect(); };
+    }
+    function setPill(text, ok) {
+      if (!pill) return;
+      pill.textContent = text;
+      pill.className = ok ? 'pill' : 'pill off';
+      pill.title = 'WebSocket · tap to reconnect';
+    }
+    function connect() {
+      if (wsRetryTimer) { clearTimeout(wsRetryTimer); wsRetryTimer = null; }
+      try { if (ws && ws.readyState <= 1) ws.close(); } catch (e) {}
+      const url = WS_URLS[wsIdx % WS_URLS.length];
+      setPill('Connecting…', false);
+      try {
+        ws = new WebSocket(url);
+      } catch (e) {
+        setPill('Offline', false);
+        wsIdx++;
+        wsRetryTimer = setTimeout(connect, 2000);
+        return;
+      }
+      ws.onopen = () => {
+        setPill('Connected', true);
+        console.log('[Vortexa] WS open', url);
+        try { send({ action: 'health' }); } catch (e) {}
+      };
+      ws.onclose = () => {
+        setPill('Offline', false);
+        console.log('[Vortexa] WS closed', url);
+        wsIdx++;
+        wsRetryTimer = setTimeout(connect, 1800);
+      };
+      ws.onerror = (err) => {
+        console.warn('[Vortexa] WS error', url, err);
+      };
+      ws.onmessage = (ev) => {
+        const data = JSON.parse(ev.data);
+        if (data.action === 'load_template' && data.status === 'success') {
+          topology = data.topology || [];
+          chainList = data.chains || [];
+          activeChain = data.active_chain || null;
+          allChains = data.all_chains || null;
+          chainOrigins = data.chain_origins || {};
+          if (data.tcp_offset) tcpOffset = data.tcp_offset;
+          if (data.default_target && data.default_target.length >= 3) {
+            targetPos = data.default_target.slice(0, 3);
+          } else if (data.reach_m) {
+            const r = Number(data.reach_m) * 0.65;
+            targetPos = [r * 0.7, 0.0, r * 0.6];
+          }
+          ensureTargetMesh();
+          robotMeta = data.metadata || {};
+          const nDoF = topology.filter(l => l.type !== 'fixed').length;
+          jointAngles = new Array(nDoF).fill(0);
+          if (nDoF >= 6) {
+            jointAngles[1] = -0.6;
+            jointAngles[2] = 1.0;
+            if (nDoF > 4) jointAngles[4] = 0.3;
+          } else if (nDoF === 3) {
+            jointAngles[0] = 0.3;
+            jointAngles[1] = -0.6;
+            jointAngles[2] = 1.0;
+          }
+          buildSliders();
+          jointSliders.querySelectorAll('input').forEach((inp, i) => {
+            if (jointAngles[i] !== undefined) {
+              inp.value = jointAngles[i];
+              const valEl = inp.parentElement.querySelector('.val');
+              if (valEl) valEl.textContent = Number(jointAngles[i]).toFixed(2);
+            }
+          });
+          buildLinkList(); buildRobotVisual(topology);
+          try { renderChainSelect(); } catch (e) { console.warn(e); }
+          send({ action: 'list_presets', template_name: currentTemplateId });
+        }
+        if (data.action === 'select_chain' && data.status === 'success') {
+          topology = data.topology || [];
+          activeChain = data.active_chain;
+          chainList = data.chains || chainList;
+          if (data.all_chains) allChains = data.all_chains;
+          if (data.chain_origins) chainOrigins = data.chain_origins;
+          const nDoF = topology.filter(l => l.type !== 'fixed').length;
+          jointAngles = new Array(nDoF).fill(0);
+          if (nDoF >= 6) { jointAngles[1] = -0.6; jointAngles[2] = 1.0; }
+          else if (nDoF === 3) { jointAngles[0] = 0.3; jointAngles[1] = -0.6; jointAngles[2] = 1.0; }
+          buildSliders(); buildLinkList(); buildRobotVisual(topology);
+          try { renderChainSelect(); } catch (e) { console.warn(e); }
+          showStatus('Chain: ' + activeChain, 'Active chain highlighted. Other limbs shown dimmed. IK applies here.', 'success');
+        }
+        if (data.action === 'plan_cartesian' && data.joint_path) {
+          lastJointPath = data.joint_path;
+        }
+        if (data.action === 'export_trajectory') {
+          showStatus('Trajectory exported', data.message || data.path || 'CSV written.', 'success');
+        }
+
+        if (data.action === 'list_presets' && data.status === 'success') {
+          renderPresets(data.poses || {}, data.labels || {});
+        }
+        if (data.action === 'apply_preset' && data.joint_angles) {
+          jointAngles = data.joint_angles.slice();
+          jointSliders.querySelectorAll('input').forEach((inp, i) => {
+            if (jointAngles[i] !== undefined) {
+              inp.value = jointAngles[i];
+              const valEl = inp.parentElement.querySelector('.val');
+              if (valEl) valEl.textContent = Number(jointAngles[i]).toFixed(2);
+            }
+          });
+          applyJointAngles();
+          showStatus('Preset: ' + (data.preset || 'pose'), 'Whole-body pose applied to active chain.', 'success');
+        }
+        if (data.action === 'collision_check') {
+          drawCollisionSpheres(data.spheres, data.collisions);
+          showStatus(data.has_collision ? 'Collision risk' : 'Collision clear', data.message || '', data.has_collision ? 'warn' : 'success');
+        }
+        if (data.action === 'import_urdf' && data.status === 'success') {
+          topology = data.topology;
+          currentTemplateId = data.robot_name || 'imported';
+          buildRobotVisual(topology);
+          buildSliders();
+          buildLinkList();
+          showStatus('URDF imported', data.message || 'Topology loaded into viewport.', 'success');
+        }
+        if (data.action === 'motion_save') {
+          showStatus('Motion saved', data.message || 'Sequence stored on device.', 'success');
+        }
+        if (data.action === 'motion_list') {
+          const n = (data.motions || []).length;
+          showStatus('Motions', n ? (n + ' sequences on device') : 'No saved motions yet', n ? 'success' : 'warn');
+          if (data.motions && data.motions.length) {
+            statusLine(data.motions.map(m => m.name + ' (' + m.waypoints + ')').join(', '));
+          }
+        }
+        if (data.action === 'export_usd') {
+          showStatus('USD exported', data.message || data.path || 'USDA written.', 'success');
+
+        if (data.action === 'validate_robot' && data.report) {
+          renderHealthReport(data.report);
+          const tab = document.querySelector('.dock-tab[data-tab="status"]');
+          if (tab) tab.click();
+          showStatus('Health ' + (data.report.grade || ''), data.message || data.report.summary, data.report.score >= 70 ? 'success' : 'warn');
+          return;
+        }
+        if (data.action === 'enrich_physics' && data.topology) {
+          topology = data.topology;
+          buildLinkList(); buildRobotVisual(topology);
+          showStatus('Physics enriched', data.message || '', 'success');
+          send({ action: 'validate_robot', topology, robot_name: currentTemplateId || 'custom' });
+          return;
+        }
+        if (data.action === 'save_project') {
+          showStatus('Project saved', data.message || data.path || '', 'success');
+          send({ action: 'list_projects' });
+          return;
+        }
+        if (data.action === 'list_projects') {
+          renderProjectList(data);
+          showStatus('Projects', data.message || '', 'success');
+          return;
+        }
+        if (data.action === 'load_project' && data.project) {
+          applyLoadedProject(data.project);
+          return;
+        }
+
+        }
+
+        humanizeResponse(data);
+      };
+    }
+    function send(obj) {
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify(obj));
+        console.log('[Vortexa] send', obj.action || obj);
+      } else {
+        console.warn('[Vortexa] send failed', obj.action, 'ws state', ws && ws.readyState);
+        showStatus('Not connected', 'Tap the Offline pill or run: python3 server.py', 'warn');
+      }
+    }
+
+    function buildSliders() {
+      jointSliders.innerHTML = '';
+      let j = 0;
+      topology.forEach(link => {
+        if (link.type === 'fixed') return;
+        const lim = link.limit || {};
+        const lo = lim.lower != null ? Number(lim.lower) : -3.14;
+        const hi = lim.upper != null ? Number(lim.upper) : 3.14;
+        const row = document.createElement('div');
+        row.className = 'joint';
+        const idx = j;
+        const name = (link.name || ('J' + idx)).replace(/_/g, ' ');
+        row.innerHTML = '<label title="' + name + '">J' + idx + '</label>' +
+          '<input type="range" min="' + lo + '" max="' + hi + '" step="0.01" value="0">' +
+          '<span class="val">0.00</span>';
+        const inp = row.querySelector('input');
+        const val = row.querySelector('.val');
+        inp.oninput = () => {
+          jointAngles[idx] = parseFloat(inp.value);
+          val.textContent = jointAngles[idx].toFixed(2);
+          // Near-limit warning color
+          const span = (hi - lo) || 1;
+          const t = (jointAngles[idx] - lo) / span;
+          val.style.color = (t < 0.05 || t > 0.95) ? '#f59e0b' : '#cbd5e1';
+          applyJointAngles();
+        };
+        jointSliders.appendChild(row);
+        j++;
+      });
+      if (!j) jointSliders.innerHTML = '<p style="color:var(--muted);font-size:12px;">No movable joints yet.</p>';
+    }
+
+    function buildLinkList() {
+      if (!topology.length) { linkList.innerHTML = 'No parts yet. Add some!'; return; }
+      linkList.innerHTML = topology.map((l, i) =>
+        '<div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">' +
+        '<span>' + (l.name || 'Part ' + i) + '</span><span style="color:var(--muted)">' + l.type + '</span></div>'
+      ).join('');
+    }
+
+
+    function getTcp() {
+      const x = parseFloat(document.getElementById('tcp-x')?.value || 0);
+      const y = parseFloat(document.getElementById('tcp-y')?.value || 0);
+      const z = parseFloat(document.getElementById('tcp-z')?.value || 0);
+      tcpOffset = { xyz: [x, y, z], rpy: (tcpOffset && tcpOffset.rpy) || [0, 0, 0] };
+      return tcpOffset;
+    }
+
+    function renderChainSelect() {
+      const el = document.getElementById('chain-select');
+      if (!el) return;
+      if (!chainList || !chainList.length) {
+        el.innerHTML = '<span style="color:var(--muted);font-size:11px;">Single chain robot</span>';
+        return;
+      }
+      el.innerHTML = chainList.filter(c => c !== 'torso' && c !== 'body').map(c =>
+        '<div class="chip' + (c === activeChain ? ' active' : '') + '" data-chain="' + c + '">' + c + '</div>'
+      ).join('');
+      el.querySelectorAll('[data-chain]').forEach(ch => {
+        ch.onclick = () => {
+          send({ action: 'select_chain', template_name: currentTemplateId, chain: ch.dataset.chain });
+        };
+      });
+    }
+
+
+    function renderPresets(available, labels) {
+      const el = document.getElementById('pose-presets');
+      if (!el) return;
+      availablePresets = available || {};
+      const keys = Object.keys(availablePresets);
+      if (!keys.length) {
+        el.innerHTML = '<span style="color:var(--muted);font-size:11px;">No presets for this robot</span>';
+        return;
+      }
+      el.innerHTML = keys.map(k =>
+        '<div class="chip" data-preset="' + k + '">' + ((labels && labels[k]) || k) + '</div>'
+      ).join('');
+      el.querySelectorAll('[data-preset]').forEach(ch => {
+        ch.onclick = () => {
+          send({ action: 'apply_preset', template_name: currentTemplateId, preset: ch.dataset.preset, topology });
+        };
+      });
+    }
+
+    function drawCollisionSpheres(spheres, collisions) {
+      if (collisionGroup) {
+        scene.remove(collisionGroup);
+        collisionGroup = null;
+      }
+      if (!spheres || !spheres.length) return;
+      collisionGroup = new THREE.Group();
+      const hit = new Set();
+      (collisions || []).forEach(c => { hit.add(c.a); hit.add(c.b); });
+      spheres.forEach(s => {
+        const r = Math.max(0.02, s.radius || 0.05);
+        const mesh = new THREE.Mesh(
+          new THREE.SphereGeometry(r, 16, 16),
+          new THREE.MeshStandardMaterial({
+            color: hit.has(s.name) ? 0xef4444 : 0x22d3ee,
+            transparent: true, opacity: 0.28, metalness: 0.1, roughness: 0.8
+          })
+        );
+        // spheres centers are in robot Z-up; map to world Y-up
+        const c = s.center || [0,0,0];
+        const w = robotToWorld(c);
+        mesh.position.set(w[0], w[1], w[2]);
+        collisionGroup.add(mesh);
+      });
+      scene.add(collisionGroup);
+    }
+
+    function loadTemplate(name) {
+      if (name === 'blank') {
+        topology = [{ id:0, name:'base_link', type:'fixed', length:0.1, radius:0.08, mass:2, parent:null, kind:'base' }];
+        jointAngles = [];
+        allChains = null;
+        chainOrigins = {};
+        activeChain = null;
+        chainList = [];
+        currentTemplateId = 'blank';
+        selectedPartIdx = 0;
+        buildSliders(); buildLinkList(); buildRobotVisual(topology);
+        highlightSelectedPart();
+        send({ action: 'list_presets', template_name: 'blank' });
+        showStatus('Blank robot created', 'Base ready. Open Build to add parts — works on phone, PC, and web.', 'success');
+        return;
+      }
+      currentTemplateId = name;
+      send({ action: 'load_template', template_name: name });
+    }
+
+    document.querySelectorAll('.card[data-template]').forEach(card => {
+      card.onclick = () => {
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        showStatus('Loading…', card.dataset.template || 'template', 'success');
+        loadTemplate(card.dataset.template);
+      };
+    });
+
+    (document.getElementById('btn-gallery')||{}).onclick = () => document.querySelector('[data-tab="library"]').click();
+    (document.getElementById('btn-new')||{}).onclick = () => loadTemplate('blank');
+    (document.getElementById('btn-fk')||{}).onclick = () => send({ action:'compute_fk', topology, joint_angles: jointAngles, tcp_offset: getTcp() });
+    (document.getElementById('btn-ik')||{}).onclick = () => send({ action:'compute_ik', topology, target: targetPos, joint_angles: jointAngles, tcp_offset: getTcp() });
+    (document.getElementById('btn-urdf')||{}).onclick = () => send({ action:'compile_urdf', topology, robot_name:'vortexa_export' });
+    
+    (document.getElementById('btn-health')||{}).onclick = () => send({ action:'health' });
+
+    function sendCommand(cmd, extra) {
+      const payload = Object.assign({ action: 'command', command: cmd, topology, joint_angles: jointAngles }, extra || {});
+      send(payload);
+    }
+    
+    (document.getElementById('btn-tcp')||{}).onclick = () => {
+      getTcp();
+      showStatus('TCP applied', 'Tool frame offset X:' + tcpOffset.xyz[0] + ' Y:' + tcpOffset.xyz[1] + ' Z:' + tcpOffset.xyz[2] + ' m', 'success');
+      send({ action:'compute_fk', topology, joint_angles: jointAngles, tcp_offset: tcpOffset });
+    };
+    (document.getElementById('btn-collision')||{}).onclick = () => send({ action:'collision_check', topology, joint_angles: jointAngles });
+    (document.getElementById('btn-traj-csv')||{}).onclick = () => {
+      if (!lastJointPath.length) {
+        showStatus('No trajectory', 'Run Cartesian Path first, then export.', 'warn');
+        return;
+      }
+      send({ action: 'export_trajectory', joint_path: lastJointPath, dt: 0.05, robot_name: 'vortexa_' + (currentTemplateId || 'robot') });
+    };
+
+    (document.getElementById('cmd-home')||{}).onclick = () => sendCommand('home');
+    (document.getElementById('cmd-stow')||{}).onclick = () => sendCommand('stow');
+    (document.getElementById('cmd-hold')||{}).onclick = () => sendCommand('hold');
+    (document.getElementById('cmd-stop')||{}).onclick = () => {
+      showStatus('Stop', 'Motion halted. Holding last pose.', 'warn');
+      sendCommand('hold');
+    };
+    const jog = (dx, dy, dz) => sendCommand('jog', { delta: [dx, dy, dz] });
+    (document.getElementById('jog-x+')||{}).onclick = () => jog(0.02, 0, 0);
+    (document.getElementById('jog-x-')||{}).onclick = () => jog(-0.02, 0, 0);
+    (document.getElementById('jog-y+')||{}).onclick = () => jog(0, 0.02, 0);
+    (document.getElementById('jog-y-')||{}).onclick = () => jog(0, -0.02, 0);
+    (document.getElementById('jog-z+')||{}).onclick = () => jog(0, 0, 0.02);
+    (document.getElementById('jog-z-')||{}).onclick = () => jog(0, 0, -0.02);
+
+    // End-effector chips → attach gripper-style tip message
+    document.querySelectorAll('[data-ee]').forEach(ch => {
+      ch.onclick = () => {
+        document.querySelectorAll('[data-ee]').forEach(c => c.classList.remove('active'));
+        ch.classList.add('active');
+        showStatus('End effector selected',
+          ch.textContent.trim() + ' will be noted on next URDF / ROS 2 export (flange frame).',
+          'success');
+      };
+    });
+
+    (document.getElementById('btn-ros2')||{}).onclick = () => send({ action:'export_ros2', topology, robot_name: 'vortexa_robot' });
+    (document.getElementById('btn-usd')||{}).onclick = () => send({ action:'export_usd', topology, robot_name: 'vortexa_robot' });
+    (document.getElementById('btn-mjcf')||{}).onclick = () => send({ action:'export_mjcf', topology, robot_name: 'vortexa_robot' });
+    (document.getElementById('btn-cart')||{}).onclick = () => {
+      const start = jointAngles.slice();
+      showStatus('Planning Cartesian path…', 'Solving IK along a straight line to the target.', '');
+      const handler = (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          if (data.action === 'plan_cartesian' && data.joint_path) {
+            ws.removeEventListener('message', handler);
+            playJointPath(data.joint_path, 1800);
+            const res = data.final_residual != null ? Number(data.final_residual).toFixed(5) : '?';
+            showStatus(
+              data.success ? 'Cartesian path ready' : 'Path finished (check residual)',
+              data.waypoints + ' waypoints · final residual ' + res + ' m. Playing preview.',
+              data.success ? 'success' : 'warn'
+            );
+          }
+        } catch (e) {}
+      };
+      ws.addEventListener('message', handler);
+      send({ action:'plan_cartesian', topology, start, goal: targetPos, waypoints: 14 });
+    };
+    (document.getElementById('btn-save')||{}).onclick = () => {
+      const payload = {
+        version: 2.3,
+        topology,
+        jointAngles,
+        targetPos,
+        material: currentMat,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem('vortexa_design', JSON.stringify(payload));
+      showStatus('Design saved', 'Stored locally on this device. Use Load to restore.', 'success');
+    };
+    (document.getElementById('btn-load')||{}).onclick = () => {
+      const raw = localStorage.getItem('vortexa_design');
+      if (!raw) {
+        showStatus('Nothing saved', 'Save a design first.', 'warn');
+        return;
+      }
+      try {
+        const payload = JSON.parse(raw);
+        topology = payload.topology || [];
+        jointAngles = payload.jointAngles || [];
+        targetPos = payload.targetPos || targetPos;
+        currentMat = payload.material || currentMat;
+        buildSliders(); buildLinkList(); buildRobotVisual(topology);
+        ensureTargetMesh();
+        showStatus('Design loaded', 'Restored robot with ' + topology.length + ' parts.', 'success');
+      } catch (e) {
+        showStatus('Load failed', String(e), 'warn');
+      }
+    };
+
+    (document.getElementById('btn-traj')||{}).onclick = () => {
+      // Request IK then animate from current pose to solution
+      const start = jointAngles.slice();
+      const handler = (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          if (data.action === 'compute_ik' && data.joint_angles) {
+            ws.removeEventListener('message', handler);
+            animateTrajectory(start, data.joint_angles, 1200);
+          }
+        } catch (e) {}
+      };
+      ws.addEventListener('message', handler);
+      send({ action:'compute_ik', topology, target: targetPos, joint_angles: start });
+    };
+
+    // Click on grid / empty space to place Cartesian target (raycast to plane y=0-ish via ground)
+    const raycaster = new THREE.Raycaster();
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    renderer.domElement.addEventListener('pointerdown', (ev) => {
+      if (ev.button !== 0 || !ev.shiftKey) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((ev.clientX - rect.left) / rect.width) * 2 - 1,
+        -((ev.clientY - rect.top) / rect.height) * 2 + 1
+      );
+      raycaster.setFromCamera(mouse, camera);
+      const hit = new THREE.Vector3();
+      const ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      if (raycaster.ray.intersectPlane(ground, hit)) {
+        // Keep current reach height in robot Z
+        const w = [hit.x, Math.max(0.05, targetPos[2] * 0.5 + 0.3), hit.z];
+        targetPos = worldToRobot([w[0], w[1], w[2]]);
+        // Prefer setting height from existing target Z (robot frame)
+        targetPos[2] = Math.max(0.1, targetPos[2]);
+        ensureTargetMesh();
+        showStatus('Target moved',
+          'Cartesian target (robot frame): X ' + targetPos[0].toFixed(3) + '  Y ' + targetPos[1].toFixed(3) + '  Z ' + targetPos[2].toFixed(3),
+          'success');
+      }
+    });
+
+
+    // legacy add-* replaced by parts library
+
+
+    document.querySelectorAll('.chip[data-mat]').forEach(chip => {
+      chip.onclick = () => {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentMat = chip.dataset.mat;
+        if (topology.length) buildRobotVisual(topology);
+      };
+    });
+
+    function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+    animate();
+    connect();
+    setTimeout(() => { if (!topology.length) loadTemplate('articulated_arm'); }, 700);
+  
+    // --- v3: Import URDF + Motion program ---
+    let motionWaypoints = [];
+    const importModal = document.getElementById('import-modal');
+    function showImport() {
+      if (importModal) { importModal.style.display = 'flex'; }
+    }
+    function hideImport() {
+      if (importModal) { importModal.style.display = 'none'; }
+    }
+    (document.getElementById('btn-import')||{}).onclick = showImport;
+    (document.getElementById('btn-import-cancel')||{}).onclick = hideImport;
+    (document.getElementById('btn-import-file')||{}).onclick = () => document.getElementById('urdf-file').click();
+    (document.getElementById('urdf-file')||{}).onchange = (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => { document.getElementById('urdf-paste').value = reader.result; };
+      reader.readAsText(f);
+    };
+    (document.getElementById('btn-import-go')||{}).onclick = () => {
+      const xml = (document.getElementById('urdf-paste')||{}).value || '';
+      if (!xml.trim()) { showStatus('Import','Paste or load a URDF first','warn'); return; }
+      send({ action: 'import_urdf', urdf: xml });
+      hideImport();
+    };
+    (document.getElementById('btn-add-target')||{}).onclick = () => {
+      const angles = (typeof jointAngles !== 'undefined' && jointAngles) ? jointAngles.slice() : [];
+      motionWaypoints.push({ joints: angles, label: 'T' + (motionWaypoints.length + 1) });
+      showStatus('Motion','Target ' + motionWaypoints.length + ' captured','success');
+      statusLine('Motion: ' + motionWaypoints.length + ' waypoints');
+    };
+    (document.getElementById('btn-save-motion')||{}).onclick = () => {
+      if (!motionWaypoints.length) { showStatus('Motion','Add targets first','warn'); return; }
+      const name = 'seq_' + Date.now().toString(36);
+      send({ action: 'motion_save', name, waypoints: motionWaypoints, template: currentTemplateId, active_chain: activeChain });
+    };
+    (document.getElementById('btn-list-motion')||{}).onclick = () => send({ action: 'motion_list' });
+
+    // handle import + motion in onmessage
+    const _prevHandle = typeof handleServerMessage === 'function' ? handleServerMessage : null;
+
+
+    // ===== TexaKit parts library + workspaces (v3.5.4) =====
+    const PARTS_FALLBACK = {"version": "3.1", "description": "TexaKit parts \u2014 everything to build a robot from scratch", "categories": {"structure": {"label": "Structure", "parts": [{"id": "base_plate", "name": "Base Plate", "kind": "base", "type": "fixed", "length": 0.12, "radius": 0.1, "mass": 2.5, "icon": "#"}, {"id": "link_tube", "name": "Tube Link", "kind": "link", "type": "revolute", "length": 0.3, "radius": 0.035, "mass": 0.8, "icon": "+"}, {"id": "link_box", "name": "Box Link", "kind": "link", "type": "revolute", "length": 0.2, "radius": 0.05, "mass": 1.0, "icon": "\u25a1"}, {"id": "spacer", "name": "Spacer", "kind": "link", "type": "fixed", "length": 0.05, "radius": 0.03, "mass": 0.15, "icon": "\u2013"}, {"id": "bracket_l", "name": "L-Bracket", "kind": "link", "type": "fixed", "length": 0.08, "radius": 0.025, "mass": 0.2, "icon": "\u2310"}, {"id": "chassis", "name": "Chassis Frame", "kind": "base", "type": "fixed", "length": 0.2, "radius": 0.15, "mass": 3.0, "icon": "\u25a6"}, {"id": "torso_shell", "name": "Torso Shell", "kind": "link", "type": "fixed", "length": 0.28, "radius": 0.12, "mass": 4.0, "icon": "O"}]}, "actuation": {"label": "Actuation", "parts": [{"id": "joint_rev", "name": "Revolute Joint", "kind": "joint", "type": "revolute", "axis": "z", "length": 0.08, "radius": 0.04, "mass": 0.4, "icon": "o"}, {"id": "joint_rev_y", "name": "Pitch Joint", "kind": "joint", "type": "revolute", "axis": "y", "length": 0.08, "radius": 0.04, "mass": 0.4, "icon": "\u21bb"}, {"id": "joint_rev_x", "name": "Roll Joint", "kind": "joint", "type": "revolute", "axis": "x", "length": 0.08, "radius": 0.04, "mass": 0.4, "icon": "\u27f3"}, {"id": "joint_prism", "name": "Prismatic Joint", "kind": "joint", "type": "prismatic", "axis": "z", "length": 0.15, "radius": 0.03, "mass": 0.5, "icon": "\u2195"}, {"id": "servo_std", "name": "Standard Servo", "kind": "joint", "type": "revolute", "axis": "z", "length": 0.06, "radius": 0.025, "mass": 0.12, "icon": "S"}, {"id": "motor_hub", "name": "Motor Hub", "kind": "joint", "type": "continuous", "axis": "z", "length": 0.05, "radius": 0.04, "mass": 0.3, "icon": "M"}, {"id": "gearbox", "name": "Gearbox", "kind": "link", "type": "fixed", "length": 0.07, "radius": 0.045, "mass": 0.6, "icon": "\u2699"}]}, "mobility": {"label": "Mobility", "parts": [{"id": "wheel_diff", "name": "Drive Wheel", "kind": "wheel", "type": "continuous", "axis": "y", "length": 0.04, "radius": 0.08, "mass": 0.5, "icon": "\u25ce"}, {"id": "wheel_omni", "name": "Omni Wheel", "kind": "wheel", "type": "continuous", "axis": "y", "length": 0.03, "radius": 0.06, "mass": 0.35, "icon": "\u25c9"}, {"id": "caster", "name": "Caster", "kind": "wheel", "type": "fixed", "length": 0.03, "radius": 0.03, "mass": 0.1, "icon": "\u00b0"}, {"id": "track_seg", "name": "Track Segment", "kind": "link", "type": "fixed", "length": 0.12, "radius": 0.04, "mass": 0.4, "icon": "\u2261"}, {"id": "leg_hip", "name": "Leg Hip", "kind": "joint", "type": "revolute", "axis": "z", "length": 0.08, "radius": 0.035, "mass": 0.35, "icon": "\u2227"}, {"id": "leg_knee", "name": "Leg Knee", "kind": "joint", "type": "revolute", "axis": "y", "length": 0.14, "radius": 0.03, "mass": 0.4, "icon": "\u2220"}, {"id": "prop_arm", "name": "Prop Arm", "kind": "link", "type": "fixed", "length": 0.22, "radius": 0.015, "mass": 0.08, "icon": "\u2013"}, {"id": "rotor_hub", "name": "Rotor Hub", "kind": "joint", "type": "continuous", "axis": "z", "length": 0.03, "radius": 0.025, "mass": 0.05, "icon": "\u2726"}]}, "sensing": {"label": "Sensing", "parts": [{"id": "imu_link", "name": "IMU", "kind": "sensor", "type": "fixed", "length": 0.03, "radius": 0.02, "mass": 0.02, "icon": "\u25ce", "sensor": "imu"}, {"id": "rgb_camera", "name": "RGB Camera", "kind": "sensor", "type": "fixed", "length": 0.04, "radius": 0.025, "mass": 0.08, "icon": "\u25a3", "sensor": "camera"}, {"id": "depth_camera", "name": "Depth Camera", "kind": "sensor", "type": "fixed", "length": 0.05, "radius": 0.03, "mass": 0.15, "icon": "\u25eb", "sensor": "depth"}, {"id": "lidar_2d", "name": "2D LiDAR", "kind": "sensor", "type": "fixed", "length": 0.04, "radius": 0.04, "mass": 0.2, "icon": "\u25cd", "sensor": "lidar"}, {"id": "force_torque", "name": "F/T Sensor", "kind": "sensor", "type": "fixed", "length": 0.03, "radius": 0.035, "mass": 0.12, "icon": "\u2696", "sensor": "ft"}, {"id": "encoder", "name": "Encoder", "kind": "sensor", "type": "fixed", "length": 0.02, "radius": 0.02, "mass": 0.03, "icon": "\u2300", "sensor": "encoder"}]}, "power": {"label": "Power & Compute", "parts": [{"id": "battery_pack", "name": "Battery Pack", "kind": "power", "type": "fixed", "length": 0.1, "radius": 0.05, "mass": 1.2, "icon": "\u25ae"}, {"id": "pdu", "name": "Power Dist.", "kind": "power", "type": "fixed", "length": 0.06, "radius": 0.04, "mass": 0.25, "icon": "\u26a1"}, {"id": "mcu_board", "name": "MCU Board", "kind": "compute", "type": "fixed", "length": 0.05, "radius": 0.04, "mass": 0.08, "icon": "\u29c9"}, {"id": "sbc", "name": "SBC (Pi/Jetson)", "kind": "compute", "type": "fixed", "length": 0.08, "radius": 0.05, "mass": 0.2, "icon": "\u25a3"}, {"id": "motor_driver", "name": "Motor Driver", "kind": "power", "type": "fixed", "length": 0.05, "radius": 0.03, "mass": 0.1, "icon": "\u25b7"}]}, "end_effectors": {"label": "End Effectors", "parts": [{"id": "parallel_gripper", "name": "Parallel Gripper", "kind": "gripper", "type": "revolute", "axis": "z", "length": 0.1, "radius": 0.04, "mass": 0.35, "icon": "[]"}, {"id": "vacuum_cup", "name": "Vacuum Cup", "kind": "gripper", "type": "fixed", "length": 0.06, "radius": 0.04, "mass": 0.15, "icon": "\u222a"}, {"id": "tool_flange", "name": "Tool Flange", "kind": "flange", "type": "fixed", "length": 0.04, "radius": 0.045, "mass": 0.2, "icon": "\u2299"}, {"id": "suction_array", "name": "Suction Array", "kind": "gripper", "type": "fixed", "length": 0.08, "radius": 0.06, "mass": 0.4, "icon": "\u2237"}, {"id": "magnetic_ee", "name": "Magnetic EE", "kind": "gripper", "type": "fixed", "length": 0.05, "radius": 0.04, "mass": 0.25, "icon": "\u78c1"}, {"id": "welding_torch", "name": "Weld Torch", "kind": "tool", "type": "fixed", "length": 0.18, "radius": 0.025, "mass": 0.5, "icon": "T"}]}}, "materials": [{"id": "aluminum", "name": "Aluminum", "density": 2700, "color": "#9ca3af"}, {"id": "carbon", "name": "Carbon Fiber", "density": 1600, "color": "#1f2937"}, {"id": "titanium", "name": "Titanium", "density": 4500, "color": "#94a3b8"}, {"id": "plastic", "name": "Engineering Plastic", "density": 1400, "color": "#f59e0b"}, {"id": "steel", "name": "Steel", "density": 7850, "color": "#6b7280"}, {"id": "abs", "name": "ABS", "density": 1050, "color": "#38bdf8"}]};
+
+    function loadPartsCatalog() {
+      partsCatalog = PARTS_FALLBACK;
+      renderPartsLibrary();
+    }
+
+    function renderPartsLibrary() {
+      const root = document.getElementById('parts-library');
+      if (!root || !partsCatalog) return;
+      const cats = partsCatalog.categories || {};
+      let html = '';
+      Object.keys(cats).forEach(key => {
+        const cat = cats[key];
+        html += '<div class="parts-cat"><h4>' + (cat.label || key) + '</h4><div class="parts-grid">';
+        (cat.parts || []).forEach(p => {
+          html += '<div class="part-btn" data-part-id="' + p.id + '" data-cat="' + key + '" title="' + (p.name || p.id) + '">'
+            + '<span class="icon">' + (p.icon || '+') + '</span>' + (p.name || p.id) + '</div>';
+        });
+        html += '</div></div>';
+      });
+      root.innerHTML = html;
+      root.querySelectorAll('.part-btn').forEach(btn => {
+        btn.onclick = () => addPartFromCatalog(btn.dataset.partId, btn.dataset.cat);
+      });
+    }
+
+    function findPartDef(id, cat) {
+      const cats = (partsCatalog && partsCatalog.categories) || {};
+      if (cat && cats[cat]) {
+        const hit = (cats[cat].parts || []).find(p => p.id === id);
+        if (hit) return hit;
+      }
+      for (const k of Object.keys(cats)) {
+        const hit = (cats[k].parts || []).find(p => p.id === id);
+        if (hit) return hit;
+      }
+      return null;
+    }
+
+    function addPartFromCatalog(id, cat) {
+      const def = findPartDef(id, cat);
+      if (!def) { showStatus('Parts', 'Unknown part', 'warn'); return; }
+      if (topology.length === 0 && def.kind !== 'base') {
+        // Auto base if starting from scratch with non-base
+        topology.push({
+          id: 0, name: 'base_link', type: 'fixed', length: 0.12, radius: 0.09, mass: 2.0,
+          parent: null, material: currentMat, kind: 'base'
+        });
+      }
+      const idx = topology.length;
+      const part = {
+        id: idx,
+        name: (def.name || def.id).toLowerCase().replace(/\s+/g, '_') + '_' + idx,
+        type: def.type || 'revolute',
+        axis: def.axis || 'z',
+        length: def.length || 0.2,
+        radius: def.radius || 0.04,
+        mass: def.mass || 0.5,
+        parent: idx - 1,
+        material: currentMat,
+        kind: def.kind || 'link',
+        part_id: def.id
+      };
+      if (def.sensor) part.sensor = def.sensor;
+      if (part.type !== 'fixed') {
+        part.limit = { lower: -3.14, upper: 3.14, effort: 50, velocity: 2 };
+      }
+      topology.push(part);
+      allChains = null;
+      activeChain = null;
+      selectedPartIdx = idx;
+      const nDoF = topology.filter(l => l.type !== 'fixed').length;
+      jointAngles = new Array(nDoF).fill(0);
+      buildSliders();
+      buildLinkList();
+      buildRobotVisual(topology);
+      refreshEditLists();
+      syncSculptFromSelection();
+      highlightSelectedPart();
+      if (!currentTemplateId || currentTemplateId === 'blank') send({ action: 'list_presets', template_name: 'blank' });
+      showStatus('Part added', (def.name || id) + ' · ' + topology.length + ' parts total', 'success');
+    }
+
+    function refreshEditLists() {
+      const el = document.getElementById('edit-link-list');
+      if (!el) return;
+      if (!topology.length) { el.innerHTML = 'No parts yet.'; return; }
+      el.innerHTML = topology.map((l, i) =>
+        '<div class="part-pick" data-idx="' + i + '" style="padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;'
+        + (i === selectedPartIdx ? 'color:var(--accent);' : '') + '">'
+        + '<span>' + (l.name || ('Part ' + i)) + '</span><span style="color:var(--muted)">' + (l.type || '') + '</span></div>'
+      ).join('');
+      el.querySelectorAll('.part-pick').forEach(row => {
+        row.onclick = () => {
+          selectedPartIdx = parseInt(row.dataset.idx, 10);
+          loadEditForm();
+          syncSculptFromSelection();
+          refreshEditLists();
+          highlightSelectedPart();
+        };
+      });
+      loadEditForm();
+    }
+
+    function loadEditForm() {
+      const l = topology[selectedPartIdx];
+      const hint = document.getElementById('edit-sel-hint');
+      if (!l) {
+        if (hint) hint.textContent = 'Select a part in the list to edit.';
+        return;
+      }
+      if (hint) hint.textContent = 'Editing: ' + (l.name || selectedPartIdx);
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+      set('edit-name', l.name || '');
+      set('edit-type', l.type || 'revolute');
+      set('edit-axis', l.axis || 'z');
+      set('edit-mass', l.mass != null ? l.mass : 1);
+    }
+
+    function applyEditForm() {
+      if (selectedPartIdx < 0 || !topology[selectedPartIdx]) {
+        showStatus('Edit', 'Select a part first', 'warn'); return;
+      }
+      const l = topology[selectedPartIdx];
+      const name = (document.getElementById('edit-name') || {}).value;
+      const type = (document.getElementById('edit-type') || {}).value;
+      const axis = (document.getElementById('edit-axis') || {}).value;
+      const mass = parseFloat((document.getElementById('edit-mass') || {}).value);
+      if (name) l.name = name;
+      if (type) l.type = type;
+      if (axis) l.axis = axis;
+      if (!isNaN(mass)) l.mass = mass;
+      const nDoF = topology.filter(x => x.type !== 'fixed').length;
+      if (jointAngles.length !== nDoF) jointAngles = new Array(nDoF).fill(0);
+      buildSliders(); buildLinkList(); buildRobotVisual(topology);
+      refreshEditLists();
+      showStatus('Part updated', l.name, 'success');
+    }
+
+    function deleteSelectedPart() {
+      if (selectedPartIdx < 0 || selectedPartIdx >= topology.length) {
+        showStatus('Edit', 'Select a part to delete', 'warn'); return;
+      }
+      if (topology.length <= 1) {
+        showStatus('Edit', 'Keep at least one part (base)', 'warn'); return;
+      }
+      topology.splice(selectedPartIdx, 1);
+      topology.forEach((l, i) => { l.id = i; l.parent = i === 0 ? null : i - 1; });
+      selectedPartIdx = Math.min(selectedPartIdx, topology.length - 1);
+      const nDoF = topology.filter(x => x.type !== 'fixed').length;
+      jointAngles = new Array(nDoF).fill(0);
+      buildSliders(); buildLinkList(); buildRobotVisual(topology);
+      refreshEditLists(); syncSculptFromSelection();
+      showStatus('Part deleted', topology.length + ' parts remain', 'success');
+    }
+
+    function syncSculptFromSelection() {
+      const l = topology[selectedPartIdx];
+      const label = document.getElementById('sculpt-sel');
+      const len = document.getElementById('sculpt-len');
+      const rad = document.getElementById('sculpt-rad');
+      const lenV = document.getElementById('sculpt-len-v');
+      const radV = document.getElementById('sculpt-rad-v');
+      if (!l) {
+        if (label) label.textContent = 'None — pick a part in Edit.';
+        return;
+      }
+      if (label) label.textContent = (l.name || ('Part ' + selectedPartIdx)) + ' · ' + (l.type || '');
+      if (len) { len.value = l.length || 0.2; if (lenV) lenV.textContent = Number(len.value).toFixed(2); }
+      if (rad) { rad.value = l.radius || 0.04; if (radV) radV.textContent = Number(rad.value).toFixed(3); }
+    }
+
+    function applySculptLive() {
+      const l = topology[selectedPartIdx];
+      if (!l) return;
+      const len = document.getElementById('sculpt-len');
+      const rad = document.getElementById('sculpt-rad');
+      if (len) l.length = parseFloat(len.value);
+      if (rad) l.radius = parseFloat(rad.value);
+      const lenV = document.getElementById('sculpt-len-v');
+      const radV = document.getElementById('sculpt-rad-v');
+      if (lenV && len) lenV.textContent = Number(len.value).toFixed(2);
+      if (radV && rad) radV.textContent = Number(rad.value).toFixed(3);
+    }
+
+    function rebuildSculpt() {
+      applySculptLive();
+      buildRobotVisual(topology);
+      showStatus('Sculpt', 'Mesh rebuilt for selected part', 'success');
+    }
+
+    function setWorkspaceMode(mode) {
+      document.querySelectorAll('.mode-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.mode === mode);
+      });
+      const tabMap = {
+        object: 'library',
+        edit: 'edit',
+        sculpt: 'sculpt',
+        animate: 'animate',
+        control: 'control'
+      };
+      const tab = tabMap[mode] || 'library';
+      document.querySelectorAll('.dock-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tab);
+      });
+      document.querySelectorAll('.dock-body').forEach(b => { b.style.display = 'none'; });
+      const body = document.getElementById('tab-' + tab);
+      if (body) body.style.display = 'block';
+      if ((mode === 'edit' || mode === 'sculpt') && selectedPartIdx < 0 && topology.length) {
+        selectedPartIdx = topology.length - 1;
+      }
+      if (mode === 'edit') refreshEditLists();
+      if (mode === 'sculpt') syncSculptFromSelection();
+      highlightSelectedPart();
+      if (mode === 'animate') {
+        const ap = document.getElementById('anim-presets');
+        const src = document.getElementById('pose-presets');
+        if (ap && src) ap.innerHTML = src.innerHTML;
+        const kc = document.getElementById('anim-kf-count');
+        if (kc) kc.textContent = String(motionWaypoints.length || 0);
+      }
+    }
+
+    // Wire modebar
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.onclick = () => setWorkspaceMode(btn.dataset.mode);
+    });
+
+    // Build material chips
+    const matBuild = document.getElementById('mat-chips-build');
+    if (matBuild) {
+      matBuild.querySelectorAll('.chip').forEach(chip => {
+        chip.onclick = () => {
+          currentMat = chip.dataset.mat;
+          matBuild.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          // also sync library material chips if present
+          document.querySelectorAll('[data-mat]').forEach(c => {
+            if (c.dataset.mat === currentMat) c.classList.add('active');
+          });
+        };
+      });
+    }
+
+    const btnApplyEdit = document.getElementById('btn-apply-edit');
+    if (btnApplyEdit) btnApplyEdit.onclick = applyEditForm;
+    const btnDel = document.getElementById('btn-delete-part');
+    if (btnDel) btnDel.onclick = deleteSelectedPart;
+    const btnSculpt = document.getElementById('btn-sculpt-apply');
+    if (btnSculpt) btnSculpt.onclick = rebuildSculpt;
+    ['sculpt-len', 'sculpt-rad'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.oninput = applySculptLive;
+    });
+
+    // Animate workspace mirrors motion program
+    const animAdd = document.getElementById('anim-add-target');
+    if (animAdd) animAdd.onclick = () => {
+      const angles = (jointAngles || []).slice();
+      motionWaypoints.push({ joints: angles, label: 'K' + (motionWaypoints.length + 1) });
+      const kc = document.getElementById('anim-kf-count');
+      if (kc) kc.textContent = String(motionWaypoints.length);
+      showStatus('Keyframe', 'K' + motionWaypoints.length + ' captured', 'success');
+    };
+    const animPlay = document.getElementById('anim-play');
+    if (animPlay) animPlay.onclick = () => {
+      if (!motionWaypoints.length) { showStatus('Animate', 'Add keyframes first', 'warn'); return; }
+      const path = motionWaypoints.map(w => w.joints || []);
+      if (typeof playJointPath === 'function') playJointPath(path, Math.max(1200, path.length * 600));
+      showStatus('Animate', 'Playing ' + path.length + ' keyframes', 'success');
+    };
+    const animSave = document.getElementById('anim-save');
+    if (animSave) animSave.onclick = () => {
+      if (!motionWaypoints.length) { showStatus('Animate', 'Add keyframes first', 'warn'); return; }
+      const name = 'clip_' + Date.now().toString(36);
+      send({ action: 'motion_save', name, waypoints: motionWaypoints, template: currentTemplateId, active_chain: activeChain });
+    };
+    const animList = document.getElementById('anim-list');
+    if (animList) animList.onclick = () => send({ action: 'motion_list' });
+    const animCsv = document.getElementById('anim-traj-csv');
+    if (animCsv) animCsv.onclick = () => {
+      const b = document.getElementById('btn-traj-csv');
+      if (b) b.click();
+    };
+
+    // Enhance buildLinkList to allow selection
+    const _buildLinkList = buildLinkList;
+    buildLinkList = function() {
+      _buildLinkList();
+      const ll = document.getElementById('link-list');
+      if (!ll || !topology.length) return;
+      ll.innerHTML = topology.map((l, i) =>
+        '<div data-idx="' + i + '" style="padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;'
+        + (i === selectedPartIdx ? 'color:var(--accent);' : '') + '">'
+        + '<span>' + (l.name || ('Part ' + i)) + '</span><span style="color:var(--muted)">' + (l.kind || l.type) + '</span></div>'
+      ).join('');
+      ll.querySelectorAll('[data-idx]').forEach(row => {
+        row.onclick = () => {
+          selectedPartIdx = parseInt(row.dataset.idx, 10);
+          buildLinkList();
+          refreshEditLists();
+          syncSculptFromSelection();
+          highlightSelectedPart();
+        };
+      });
+    };
+
+    loadPartsCatalog();
+
+
+    // ===== v3.5.4 — validate, projects, scene, mesh, first-run, dual-arm =====
+    let sceneObjects = [];
+    let sceneGroup = null;
+
+    function ensureSceneGroup() {
+      if (sceneGroup) scene.remove(sceneGroup);
+      sceneGroup = new THREE.Group();
+      scene.add(sceneGroup);
+      sceneObjects.forEach(obj => {
+        let mesh;
+        if (obj.type === 'box') {
+          const s = obj.size || [0.4, 0.4, 0.05];
+          mesh = new THREE.Mesh(
+            new THREE.BoxGeometry(s[0], s[1], s[2]),
+            new THREE.MeshStandardMaterial({ color: obj.color || 0x334155, metalness: 0.3, roughness: 0.7 })
+          );
+        } else {
+          mesh = new THREE.Mesh(
+            new THREE.SphereGeometry(obj.radius || 0.05, 16, 16),
+            new THREE.MeshStandardMaterial({ color: obj.color || 0x64748b })
+          );
+        }
+        const p = obj.position || [0, 0, 0];
+        // scene uses Y-up in three; our robot uses Z-up visual convention — map x,z,y carefully
+        mesh.position.set(p[0], p[2], p[1]);
+        mesh.userData.sceneObj = true;
+        sceneGroup.add(mesh);
+      });
+    }
+
+    function addSceneObject(obj) {
+      sceneObjects.push(obj);
+      ensureSceneGroup();
+      showStatus('Scene', (obj.name || obj.type) + ' added', 'success');
+    }
+
+    (document.getElementById('scene-table')||{}).onclick = () => addSceneObject({
+      type: 'box', name: 'table', size: [0.7, 0.7, 0.06], position: [0.5, 0, 0.4], color: 0x334155
+    });
+    (document.getElementById('scene-box')||{}).onclick = () => addSceneObject({
+      type: 'box', name: 'box', size: [0.12, 0.12, 0.12], position: [0.45, 0, 0.5], color: 0xb45309
+    });
+    (document.getElementById('scene-clear')||{}).onclick = () => {
+      sceneObjects = [];
+      ensureSceneGroup();
+      showStatus('Scene cleared', 'All obstacles removed', 'success');
+    };
+
+    function renderHealthReport(report) {
+      const el = document.getElementById('health-report');
+      if (!el || !report) return;
+      const issues = (report.issues || []).map(i => '<div class="issue err">● ' + i.message + '</div>').join('');
+      const warns = (report.warnings || []).map(i => '<div class="issue warn">● ' + i.message + '</div>').join('');
+      const ready = (report.ready_for || []).join(' · ') || 'Fix issues first';
+      el.innerHTML = '<div class="grade">' + (report.grade || '?') + ' <span style="font-size:14px;color:var(--muted)">' + (report.score || 0) + '/100</span></div>'
+        + '<div style="margin:6px 0;color:var(--muted)">' + (report.summary || '') + '</div>'
+        + '<div style="margin-bottom:6px"><b>Ready:</b> ' + ready + '</div>'
+        + issues + warns;
+    }
+
+    (document.getElementById('btn-validate')||{}).onclick = () => {
+      if (!topology.length) { showStatus('Validate', 'Load or build a robot first', 'warn'); return; }
+      send({ action: 'validate_robot', topology, robot_name: currentTemplateId || 'custom' });
+    };
+    (document.getElementById('btn-enrich')||{}).onclick = () => {
+      if (!topology.length) { showStatus('Physics', 'No robot loaded', 'warn'); return; }
+      send({ action: 'enrich_physics', topology });
+    };
+    (document.getElementById('btn-save-project')||{}).onclick = () => {
+      const name = prompt('Project name', currentTemplateId || 'my_robot') || 'my_robot';
+      send({
+        action: 'save_project',
+        name,
+        template: currentTemplateId,
+        topology,
+        joint_angles: jointAngles,
+        active_chain: activeChain,
+        tcp: tcpOffset,
+        scene: sceneObjects,
+        motions: motionWaypoints || [],
+      });
+    };
+    (document.getElementById('btn-examples')||{}).onclick = () => {
+      send({ action: 'list_projects' });
+      // switch to status to show list
+      const tab = document.querySelector('.dock-tab[data-tab="status"]');
+      if (tab) tab.click();
+    };
+
+    function applyLoadedProject(project) {
+      if (!project) return;
+      if (project.use_template) {
+        loadTemplate(project.use_template);
+        if (project.scene) { sceneObjects = project.scene; ensureSceneGroup(); }
+        showStatus('Example', project.name || project.use_template, 'success');
+        return;
+      }
+      if (project.topology && project.topology.length) {
+        topology = project.topology;
+        currentTemplateId = project.template || 'custom';
+        jointAngles = project.joint_angles || new Array(topology.filter(l => l.type !== 'fixed').length).fill(0);
+        allChains = null;
+        activeChain = project.active_chain || null;
+        if (project.tcp) tcpOffset = project.tcp;
+        sceneObjects = project.scene || [];
+        motionWaypoints = project.motions || [];
+        selectedPartIdx = Math.max(0, topology.length - 1);
+        buildSliders(); buildLinkList(); buildRobotVisual(topology);
+        ensureSceneGroup();
+        highlightSelectedPart();
+        send({ action: 'list_presets', template_name: currentTemplateId || 'blank' });
+        showStatus('Project loaded', (project.name || '') + ' · ' + topology.length + ' parts', 'success');
+      }
+    }
+
+    function renderProjectList(data) {
+      const el = document.getElementById('project-list');
+      if (!el) return;
+      const ex = data.examples || [];
+      const pr = data.projects || [];
+      let h = '';
+      if (ex.length) {
+        h += '<div style="margin-bottom:6px;color:var(--muted)">Examples</div>';
+        ex.forEach(e => {
+          h += '<div class="part-pick" data-file="' + e.file + '" data-ex="1" style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;">'
+            + '<span>' + e.name + '</span><span style="color:var(--muted)">' + (e.parts || '') + ' parts</span></div>';
+        });
+      }
+      if (pr.length) {
+        h += '<div style="margin:10px 0 6px;color:var(--muted)">Saved</div>';
+        pr.forEach(e => {
+          h += '<div class="part-pick" data-file="' + e.file + '" style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;">'
+            + '<span>' + e.name + '</span><span style="color:var(--muted)">' + (e.parts || '') + ' parts</span></div>';
+        });
+      }
+      if (!h) h = 'No projects yet — Save Project or open an example.';
+      el.innerHTML = h;
+      el.querySelectorAll('[data-file]').forEach(row => {
+        row.onclick = () => send({ action: 'load_project', file: row.dataset.file });
+      });
+    }
+
+    // Mesh attach (visual only — store data URL on part)
+    const meshInput = document.getElementById('mesh-file');
+    if (meshInput) {
+      meshInput.onchange = (ev) => {
+        const file = ev.target.files && ev.target.files[0];
+        if (!file) return;
+        if (selectedPartIdx < 0 || !topology[selectedPartIdx]) {
+          showStatus('Mesh', 'Select a part in Edit first', 'warn');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          topology[selectedPartIdx].mesh_name = file.name;
+          topology[selectedPartIdx].mesh_data = reader.result;
+          // Visual marker: slightly larger emissive pulse
+          highlightSelectedPart();
+          showStatus('Mesh attached', file.name + ' on ' + (topology[selectedPartIdx].name || 'part') + ' (export uses primitives; mesh kept in project)', 'success');
+        };
+        reader.readAsDataURL(file);
+      };
+    }
+
+    // Dual-arm: IK current target on active, apply mirrored angles to other chain heuristically
+    (document.getElementById('btn-dual-ik')||{}).onclick = () => {
+      if (!allChains || Object.keys(allChains).length < 2) {
+        showStatus('Dual-arm', 'Load a dual-arm template first', 'warn');
+        return;
+      }
+      // First solve IK for active chain toward target
+      const tgt = targetWorld || { x: 0.4, y: 0, z: 0.6 };
+      send({
+        action: 'compute_ik',
+        topology: (allChains[activeChain] || topology),
+        target: [tgt.x, tgt.y, tgt.z],
+        active_chain: activeChain,
+      });
+      showStatus('Dual-arm', 'IK on ' + (activeChain || 'active') + ' — switch chain & Move to Target for the other arm', 'success');
+    };
+
+    // Message handlers extension
+    const _prevHandle = typeof handleServerMessage === 'function' ? handleServerMessage : null;
+    // Patch into existing onmessage success branches by wrapping show path
+    const _origOnMsg = null;
+
+    // Hook after existing data.action handlers via mutation of the message switch - append before error
+    // We intercept by replacing a known handler tail
+
+
+    (function initWelcome() {
+      const w = document.getElementById('welcome');
+      if (!w) return;
+      try {
+        if (!localStorage.getItem('vortexa_welcome_v35')) w.style.display = 'flex';
+      } catch (e) { w.style.display = 'flex'; }
+      const dismiss = () => {
+        w.style.display = 'none';
+        try { localStorage.setItem('vortexa_welcome_v35', '1'); } catch (e) {}
+      };
+      (document.getElementById('welcome-dismiss')||{}).onclick = dismiss;
+      (document.getElementById('welcome-blank')||{}).onclick = () => { dismiss(); loadTemplate('blank'); };
+      (document.getElementById('welcome-example')||{}).onclick = () => {
+        dismiss();
+        send({ action: 'load_project', file: 'pick_cell_6dof.vortexa.json' });
+      };
+    })();
+
+</script>
+
+  <input type="file" id="urdf-file" accept=".urdf,.xml,text/xml" style="display:none" />
+  <div id="import-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;align-items:center;justify-content:center;">
+    <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:16px;max-width:520px;width:92%;">
+      <h3 style="margin:0 0 8px;color:#eee;">Import URDF</h3>
+      <p style="color:#aaa;font-size:13px;margin:0 0 8px;">Paste URDF XML or choose a file. Serial chains import best.</p>
+      <textarea id="urdf-paste" rows="8" style="width:100%;background:#111;color:#ddd;border:1px solid #444;border-radius:8px;padding:8px;font-family:monospace;font-size:12px;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        <button class="chip" id="btn-import-file">Choose File</button>
+        <button class="chip" id="btn-import-go" style="background:#2a6;">Import</button>
+        <button class="chip" id="btn-import-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
