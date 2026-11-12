@@ -1,0 +1,11 @@
+{
+  "name": "Vortexa Studio",
+  "short_name": "Vortexa",
+  "description": "Offline robot design studio — URDF, ROS 2, MuJoCo, USD",
+  "start_url": "/?v=3510",
+  "display": "standalone",
+  "background_color": "#0d0d0d",
+  "theme_color": "#1e3a5f",
+  "lang": "en",
+  "icons": []
+}

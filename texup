@@ -2,23 +2,18 @@
 # texup - start Vortexa Studio
 ROOT=/data/data/com.termux/files/home/VortexA
 cd "$ROOT" || { echo "Missing $ROOT"; exit 1; }
-
 export VORTEXA_PORT=8766
 export VORTEXA_HOST=127.0.0.1
-
 pkill -f "python3 server.py" 2>/dev/null || true
 pkill -f "http.server 8080" 2>/dev/null || true
 sleep 0.5
-
 python3 -u server.py > server.log 2>&1 &
 echo $! > vortexa_ws.pid
-
 python3 -u -m http.server 8080 --bind 127.0.0.1 > http.log 2>&1 &
 echo $! > vortexa_http.pid
-
 sleep 1
 echo "Vortexa Studio started"
-echo "  UI  -> http://127.0.0.1:8080/?v=357"
+echo "  UI  -> http://127.0.0.1:8080/?v=3510"
 echo "  WS  -> ws://127.0.0.1:8766"
 head -6 server.log 2>/dev/null
 echo "Stop with: texoff"

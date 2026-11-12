@@ -1,88 +1,49 @@
 # Vortexa Studio
 
-**Offline-first robot design studio** for phone, PC, and web.
-Author manipulators, mobile robots, humanoids, and drones — validate for simulation — export to **URDF · ROS 2 · MuJoCo · USD (Isaac)**.
+**Offline-first robot design studio** for phone, PC, and web.  
+Author manipulators, mobile robots, humanoids, and drones — validate for simulation — export **URDF · ROS 2 · MuJoCo · USD**.
 
-Version **3.5.4** · Python 3.10+ · MIT License
+Version **3.5.11** · Python 3.10+ · MIT License
 
-## Features
+## Demo path (60 seconds)
+1. Start bridge: `./texup` (Termux) or `./launch_desktop.sh`
+2. Open http://127.0.0.1:8080/?v=3510 → **Connected**
+3. TexaKit → **6-DoF Industrial Arm**
+4. **Joints** — drag live pose · **Control** — Home / jog
+5. **Validate** → **Export URDF**
 
-- **TexaKit** — blueprints + parts library (structure, joints, wheels, sensors, power, end effectors)
-- **Workspaces** — Object · Edit · Sculpt · Animate · Control
-- **Kinematics** — FK / damped IK, reach, TCP, multi-chain (dual-arm, hexapod)
-- **Sim-ready health** — mass, inertia, limits, tree checks (graded report)
-- **Projects** — save/load `.vortexa.json`, bundled examples
-- **Exports** — URDF, ROS 2 package, MuJoCo MJCF, OpenUSD, trajectory CSV
-- **Offline** — vendored Three.js; runs on Termux without cloud
+Automated smoke: `python scripts/demo_smoke.py`
 
 ## Quick start
-
 ```bash
-git clone https://github.com/<you>/VortexA.git
-cd VortexA
+git clone https://github.com/isgr870/VortexA-.git
+cd VortexA-
 pip install -r requirements.txt
-
-# Desktop
-chmod +x launch_desktop.sh && ./launch_desktop.sh
-
-# Or Termux
-chmod +x texup texoff && ./texup
+python scripts/demo_smoke.py
+./launch_desktop.sh   # or ./texup on Termux
 ```
 
-Open **http://127.0.0.1:8080/?v=354** → green **Connected** → pick a blueprint.
+## Packaging
+| Target | How |
+|--------|-----|
+| Web / PWA | Static UI + local bridge · workflow `Build Web` |
+| Windows / Linux | PyInstaller · workflow `Build Desktop` |
+| Android / iOS | Capacitor shell · see `packaging/MOBILE.md` |
 
-More detail: [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)
+Run workflows from the GitHub **Actions** tab (`workflow_dispatch` or version tags `v*`).
 
 ## Architecture
-
 ```
-Browser (index.html + Three.js)  --HTTP :8080-->  python -m http.server
-         |
-         +-- WebSocket :8766 --> server.py --> scripts/
-             (kinematics, URDF, MJCF, USD, health)
+Browser UI (Three.js) --HTTP :8080--> static files
+       |
+       +-- WebSocket :8766 --> server.py --> scripts/ (FK, IK, export, health)
 ```
 
-All compute stays local. No account, no GPU required for authoring.
-
-## Repository layout
-
-```
-VortexA/
-├── server.py              # WebSocket bridge
-├── index.html             # Studio UI
-├── requirements.txt
-├── texup / texoff         # Termux helpers
-├── launch_desktop.sh      # Desktop / LAN
-├── scripts/               # Engines & exporters
-├── assets/
-│   ├── templates/         # Robot blueprints
-│   ├── kit/               # Parts, presets, catalog
-│   └── examples/          # Sample projects
-├── vendor/three/          # Offline Three.js
-├── docs/
-└── tests/
-```
-
-## Exports
-
-| Format | Use |
-|--------|-----|
-| URDF | Gazebo, RViz, generic ROS |
-| ROS 2 package | package.xml + tree |
-| MJCF | MuJoCo |
-| USD/USDA | NVIDIA Isaac Sim |
-| Trajectory CSV | Joint timeseries |
-
-## Development
-
-```bash
-python3 -u server.py          # VORTEXA_PORT=8766
-python3 -m http.server 8080 --bind 127.0.0.1
-```
-
-See [CHANGELOG.md](CHANGELOG.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
+## Repository
+- `server.py` — local computation bridge  
+- `index.html` — Studio UI (VortexaCore + VortexaView)  
+- `assets/templates` — blueprints  
+- `scripts/demo_smoke.py` — CI / investor regression  
 
 ## License
-
 MIT — see [LICENSE](LICENSE).
-Three.js is included under its MIT license (Three.js authors).

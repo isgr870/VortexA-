@@ -1,0 +1,52 @@
+name: Build Desktop
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pyinstaller
+      - name: Bundle desktop launcher
+        run: |
+          pyinstaller --noconfirm --clean \
+            --name VortexaStudio \
+            --add-data "index.html:." \
+            --add-data "assets:assets" \
+            --add-data "vendor:vendor" \
+            --add-data "scripts:scripts" \
+            packaging/desktop_entry.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VortexaStudio-linux
+          path: dist/VortexaStudio
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pyinstaller
+      - name: Bundle Windows exe
+        shell: bash
+        run: |
+          pyinstaller --noconfirm --clean \
+            --name VortexaStudio \
+            --add-data "index.html;." \
+            --add-data "assets;assets" \
+            --add-data "vendor;vendor" \
+            --add-data "scripts;scripts" \
+            packaging/desktop_entry.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VortexaStudio-windows
+          path: dist/VortexaStudio

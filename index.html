@@ -5,6 +5,8 @@
   <meta http-equiv="Pragma" content="no-cache"/>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#1e3a5f">
   <title>Vortexa Studio</title>
   <style>
     :root {
@@ -240,7 +242,7 @@
   </div>
 
   <div id="topbar">
-    <div class="brand">Vortexa <em>Studio</em> <small>v3.5.10</small></div>
+    <div class="brand">Vortexa <em>Studio</em> <small>v3.5.11</small></div>
     <div class="spacer"></div>
     <div id="conn-pill" class="pill off">Offline</div>
   </div>
@@ -2384,7 +2386,7 @@
     const _prevHandle = typeof handleServerMessage === 'function' ? handleServerMessage : null;
 
 
-    // ===== TexaKit parts library + workspaces (v3.5.10) =====
+    // ===== TexaKit parts library + workspaces (v3.5.11) =====
     const PARTS_FALLBACK = {"version": "3.1", "description": "TexaKit parts \u2014 everything to build a robot from scratch", "categories": {"structure": {"label": "Structure", "parts": [{"id": "base_plate", "name": "Base Plate", "kind": "base", "type": "fixed", "length": 0.12, "radius": 0.1, "mass": 2.5, "icon": "#"}, {"id": "link_tube", "name": "Tube Link", "kind": "link", "type": "revolute", "length": 0.3, "radius": 0.035, "mass": 0.8, "icon": "+"}, {"id": "link_box", "name": "Box Link", "kind": "link", "type": "revolute", "length": 0.2, "radius": 0.05, "mass": 1.0, "icon": "\u25a1"}, {"id": "spacer", "name": "Spacer", "kind": "link", "type": "fixed", "length": 0.05, "radius": 0.03, "mass": 0.15, "icon": "\u2013"}, {"id": "bracket_l", "name": "L-Bracket", "kind": "link", "type": "fixed", "length": 0.08, "radius": 0.025, "mass": 0.2, "icon": "\u2310"}, {"id": "chassis", "name": "Chassis Frame", "kind": "base", "type": "fixed", "length": 0.2, "radius": 0.15, "mass": 3.0, "icon": "\u25a6"}, {"id": "torso_shell", "name": "Torso Shell", "kind": "link", "type": "fixed", "length": 0.28, "radius": 0.12, "mass": 4.0, "icon": "O"}]}, "actuation": {"label": "Actuation", "parts": [{"id": "joint_rev", "name": "Revolute Joint", "kind": "joint", "type": "revolute", "axis": "z", "length": 0.08, "radius": 0.04, "mass": 0.4, "icon": "o"}, {"id": "joint_rev_y", "name": "Pitch Joint", "kind": "joint", "type": "revolute", "axis": "y", "length": 0.08, "radius": 0.04, "mass": 0.4, "icon": "\u21bb"}, {"id": "joint_rev_x", "name": "Roll Joint", "kind": "joint", "type": "revolute", "axis": "x", "length": 0.08, "radius": 0.04, "mass": 0.4, "icon": "\u27f3"}, {"id": "joint_prism", "name": "Prismatic Joint", "kind": "joint", "type": "prismatic", "axis": "z", "length": 0.15, "radius": 0.03, "mass": 0.5, "icon": "\u2195"}, {"id": "servo_std", "name": "Standard Servo", "kind": "joint", "type": "revolute", "axis": "z", "length": 0.06, "radius": 0.025, "mass": 0.12, "icon": "S"}, {"id": "motor_hub", "name": "Motor Hub", "kind": "joint", "type": "continuous", "axis": "z", "length": 0.05, "radius": 0.04, "mass": 0.3, "icon": "M"}, {"id": "gearbox", "name": "Gearbox", "kind": "link", "type": "fixed", "length": 0.07, "radius": 0.045, "mass": 0.6, "icon": "\u2699"}]}, "mobility": {"label": "Mobility", "parts": [{"id": "wheel_diff", "name": "Drive Wheel", "kind": "wheel", "type": "continuous", "axis": "y", "length": 0.04, "radius": 0.08, "mass": 0.5, "icon": "\u25ce"}, {"id": "wheel_omni", "name": "Omni Wheel", "kind": "wheel", "type": "continuous", "axis": "y", "length": 0.03, "radius": 0.06, "mass": 0.35, "icon": "\u25c9"}, {"id": "caster", "name": "Caster", "kind": "wheel", "type": "fixed", "length": 0.03, "radius": 0.03, "mass": 0.1, "icon": "\u00b0"}, {"id": "track_seg", "name": "Track Segment", "kind": "link", "type": "fixed", "length": 0.12, "radius": 0.04, "mass": 0.4, "icon": "\u2261"}, {"id": "leg_hip", "name": "Leg Hip", "kind": "joint", "type": "revolute", "axis": "z", "length": 0.08, "radius": 0.035, "mass": 0.35, "icon": "\u2227"}, {"id": "leg_knee", "name": "Leg Knee", "kind": "joint", "type": "revolute", "axis": "y", "length": 0.14, "radius": 0.03, "mass": 0.4, "icon": "\u2220"}, {"id": "prop_arm", "name": "Prop Arm", "kind": "link", "type": "fixed", "length": 0.22, "radius": 0.015, "mass": 0.08, "icon": "\u2013"}, {"id": "rotor_hub", "name": "Rotor Hub", "kind": "joint", "type": "continuous", "axis": "z", "length": 0.03, "radius": 0.025, "mass": 0.05, "icon": "\u2726"}]}, "sensing": {"label": "Sensing", "parts": [{"id": "imu_link", "name": "IMU", "kind": "sensor", "type": "fixed", "length": 0.03, "radius": 0.02, "mass": 0.02, "icon": "\u25ce", "sensor": "imu"}, {"id": "rgb_camera", "name": "RGB Camera", "kind": "sensor", "type": "fixed", "length": 0.04, "radius": 0.025, "mass": 0.08, "icon": "\u25a3", "sensor": "camera"}, {"id": "depth_camera", "name": "Depth Camera", "kind": "sensor", "type": "fixed", "length": 0.05, "radius": 0.03, "mass": 0.15, "icon": "\u25eb", "sensor": "depth"}, {"id": "lidar_2d", "name": "2D LiDAR", "kind": "sensor", "type": "fixed", "length": 0.04, "radius": 0.04, "mass": 0.2, "icon": "\u25cd", "sensor": "lidar"}, {"id": "force_torque", "name": "F/T Sensor", "kind": "sensor", "type": "fixed", "length": 0.03, "radius": 0.035, "mass": 0.12, "icon": "\u2696", "sensor": "ft"}, {"id": "encoder", "name": "Encoder", "kind": "sensor", "type": "fixed", "length": 0.02, "radius": 0.02, "mass": 0.03, "icon": "\u2300", "sensor": "encoder"}]}, "power": {"label": "Power & Compute", "parts": [{"id": "battery_pack", "name": "Battery Pack", "kind": "power", "type": "fixed", "length": 0.1, "radius": 0.05, "mass": 1.2, "icon": "\u25ae"}, {"id": "pdu", "name": "Power Dist.", "kind": "power", "type": "fixed", "length": 0.06, "radius": 0.04, "mass": 0.25, "icon": "\u26a1"}, {"id": "mcu_board", "name": "MCU Board", "kind": "compute", "type": "fixed", "length": 0.05, "radius": 0.04, "mass": 0.08, "icon": "\u29c9"}, {"id": "sbc", "name": "SBC (Pi/Jetson)", "kind": "compute", "type": "fixed", "length": 0.08, "radius": 0.05, "mass": 0.2, "icon": "\u25a3"}, {"id": "motor_driver", "name": "Motor Driver", "kind": "power", "type": "fixed", "length": 0.05, "radius": 0.03, "mass": 0.1, "icon": "\u25b7"}]}, "end_effectors": {"label": "End Effectors", "parts": [{"id": "parallel_gripper", "name": "Parallel Gripper", "kind": "gripper", "type": "revolute", "axis": "z", "length": 0.1, "radius": 0.04, "mass": 0.35, "icon": "[]"}, {"id": "vacuum_cup", "name": "Vacuum Cup", "kind": "gripper", "type": "fixed", "length": 0.06, "radius": 0.04, "mass": 0.15, "icon": "\u222a"}, {"id": "tool_flange", "name": "Tool Flange", "kind": "flange", "type": "fixed", "length": 0.04, "radius": 0.045, "mass": 0.2, "icon": "\u2299"}, {"id": "suction_array", "name": "Suction Array", "kind": "gripper", "type": "fixed", "length": 0.08, "radius": 0.06, "mass": 0.4, "icon": "\u2237"}, {"id": "magnetic_ee", "name": "Magnetic EE", "kind": "gripper", "type": "fixed", "length": 0.05, "radius": 0.04, "mass": 0.25, "icon": "\u78c1"}, {"id": "welding_torch", "name": "Weld Torch", "kind": "tool", "type": "fixed", "length": 0.18, "radius": 0.025, "mass": 0.5, "icon": "T"}]}}, "materials": [{"id": "aluminum", "name": "Aluminum", "density": 2700, "color": "#9ca3af"}, {"id": "carbon", "name": "Carbon Fiber", "density": 1600, "color": "#1f2937"}, {"id": "titanium", "name": "Titanium", "density": 4500, "color": "#94a3b8"}, {"id": "plastic", "name": "Engineering Plastic", "density": 1400, "color": "#f59e0b"}, {"id": "steel", "name": "Steel", "density": 7850, "color": "#6b7280"}, {"id": "abs", "name": "ABS", "density": 1050, "color": "#38bdf8"}]};
 
     function loadPartsCatalog() {
@@ -2697,7 +2699,7 @@
     loadPartsCatalog();
 
 
-    // ===== v3.5.10 — validate, projects, scene, mesh, first-run, dual-arm =====
+    // ===== v3.5.11 — validate, projects, scene, mesh, first-run, dual-arm =====
     let sceneObjects = [];
     let sceneGroup = null;
 
@@ -2921,5 +2923,10 @@
     </div>
   </div>
 
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  }
+</script>
 </body>
 </html>

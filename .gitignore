@@ -1,26 +1,24 @@
-# Python
 __pycache__/
 *.py[cod]
-*.egg-info/
 .venv/
 venv/
 .env
-
-# Runtime / user data
-projects/
-urdf/
+projects/*
+!projects/.gitkeep
+urdf/*
+!urdf/.gitkeep
 *.log
 server.log
 http.log
-.DS_Store
-
-# Editor
-.idea/
-.vscode/
-*.swp
-
-# Local dumps
-*.zip
-artifacts/
 vortexa_ws.pid
 vortexa_http.pid
+.DS_Store
+*.zip
+VortexA-*.zip
+dist/
+build/
+*.egg-info/
+node_modules/
+.android/
+.capacitor/
+ios/App/Pods/

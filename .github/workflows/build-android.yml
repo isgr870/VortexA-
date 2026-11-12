@@ -1,0 +1,19 @@
+name: Build Android (scaffold)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  note:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish packaging guide
+        run: |
+          mkdir -p dist-android
+          cp packaging/MOBILE.md dist-android/
+          echo "Debug APK build requires Capacitor project init + Android SDK; see MOBILE.md" > dist-android/STATUS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Vortexa-android-scaffold
+          path: dist-android

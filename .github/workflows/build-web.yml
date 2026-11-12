@@ -1,0 +1,24 @@
+name: Build Web (PWA)
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage static web bundle
+        run: |
+          mkdir -p dist-web
+          cp index.html manifest.webmanifest sw.js dist-web/ 2>/dev/null || true
+          cp index.html dist-web/
+          cp -r assets vendor dist-web/
+          # placeholder server note
+          printf '%s\n' 'Vortexa web UI. Pair with local server.py (WS :8766).' > dist-web/README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Vortexa-web-pwa
+          path: dist-web

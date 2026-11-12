@@ -1,0 +1,19 @@
+name: Build iOS (scaffold)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  note:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish iOS packaging guide
+        run: |
+          mkdir -p dist-ios
+          cp packaging/MOBILE.md dist-ios/
+          echo "IPA requires Apple Developer certs in GitHub Secrets; see MOBILE.md" > dist-ios/STATUS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Vortexa-ios-scaffold
+          path: dist-ios
