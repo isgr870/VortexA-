@@ -22,3 +22,5 @@ http.log
 # Local dumps
 *.zip
 artifacts/
+vortexa_ws.pid
+vortexa_http.pid
