@@ -611,6 +611,35 @@ async def handle_client(websocket):
                         "message": f"Physics enriched for {len(enriched)} parts (mass, inertia, limits, collision).",
                     }
 
+                
+                elif action == "export_trajectory_csv":
+                    import csv, time
+                    waypoints = data.get("waypoints") or []
+                    angles = data.get("joint_angles") or []
+                    rows = []
+                    if waypoints:
+                        for i, wp in enumerate(waypoints):
+                            j = wp.get("joints") if isinstance(wp, dict) else wp
+                            if j:
+                                rows.append([i * 0.1] + [float(x) for x in j])
+                    elif angles:
+                        rows.append([0.0] + [float(x) for x in angles])
+                    out = ROOT / "urdf"
+                    out.mkdir(parents=True, exist_ok=True)
+                    path = out / f"traj_{int(time.time())}.csv"
+                    with open(path, "w", newline="", encoding="utf-8") as f:
+                        w = csv.writer(f)
+                        if rows:
+                            n = max(0, len(rows[0]) - 1)
+                            w.writerow(["t"] + [f"j{k}" for k in range(n)])
+                            w.writerows(rows)
+                    response = {
+                        "status": "success",
+                        "action": "export_trajectory_csv",
+                        "path": str(path),
+                        "message": f"Wrote {len(rows)} rows → {path.name}",
+                    }
+
                 elif action == "save_project":
                     project = {
                         "format": "vortexa_project",
@@ -716,7 +745,7 @@ async def handle_client(websocket):
 async def main():
     host = os.environ.get("VORTEXA_HOST", "127.0.0.1")
     port = int(os.environ.get("VORTEXA_PORT", "8766"))
-    logger.info("Vortexa Studio Bridge v3.5 starting on ws://%s:%s", host, port)
+    logger.info("Vortexa Studio Bridge v3.5.7 starting on ws://%s:%s", host, port)
     print(f"VortexaBridge listening ws://{host}:{port}", flush=True)
     # reuse_port=False: more reliable on Termux/Android
     async with serve(

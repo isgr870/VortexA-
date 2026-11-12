@@ -1,14 +1,24 @@
+# Python
 __pycache__/
 *.py[cod]
+*.egg-info/
 .venv/
 venv/
 .env
-projects/*
-!projects/.gitkeep
-urdf/*
-!urdf/.gitkeep
+
+# Runtime / user data
+projects/
+urdf/
 *.log
 server.log
 http.log
 .DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Local dumps
 *.zip
+artifacts/

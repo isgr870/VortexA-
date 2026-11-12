@@ -51,7 +51,8 @@
 
     #workspace { position: absolute; top: 132px; left: 0; right: 0; bottom: 0; display: flex; }
     #viewport { flex: 1; position: relative; background: #0d0d0d; }
-    #viewport canvas { display: block; width: 100% !important; height: 100% !important; }
+    #viewport canvas { display: block; width: 100% !important; height: 100% !important; touch-action: none; cursor: grab; }
+    #viewport canvas:active { cursor: grabbing; }
 
     #dock {
       width: 320px; background: var(--surface); border-left: 1px solid var(--border);
@@ -221,34 +222,7 @@
 
   </style>
 
-  <script>
-  (function(){
-    function probe(){
-      var pill = document.getElementById('conn-pill');
-      if(!pill) return;
-      var urls = ['ws://127.0.0.1:8766','ws://localhost:8766'];
-      var i = 0;
-      function tryOne(){
-        if(i>=urls.length){ pill.textContent='Offline'; pill.className='pill off'; return; }
-        var u = urls[i++];
-        pill.textContent='Connecting…';
-        var s;
-        try { s = new WebSocket(u); } catch(e){ tryOne(); return; }
-        var done=false;
-        s.onopen=function(){ done=true; pill.textContent='Connected'; pill.className='pill'; try{s.send(JSON.stringify({action:'health'}));}catch(e){} };
-        s.onerror=function(){ if(!done){ try{s.close();}catch(e){} tryOne(); } };
-        s.onclose=function(){ if(!done && pill.textContent!=='Connected'){ /* module may own reconnect */ } };
-        // hand off: do not close if open — module connect will open its own
-        setTimeout(function(){ if(!done){ try{s.close();}catch(e){} tryOne(); } }, 2500);
-      }
-      tryOne();
-      pill.style.cursor='pointer';
-      pill.onclick=function(){ i=0; tryOne(); };
-    }
-    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', probe);
-    else probe();
-  })();
-  </script>
+  
 
 </head>
 <body>
@@ -266,7 +240,7 @@
   </div>
 
   <div id="topbar">
-    <div class="brand">Vortexa <em>Studio</em> <small>v3.5.4</small></div>
+    <div class="brand">Vortexa <em>Studio</em> <small>v3.5.10</small></div>
     <div class="spacer"></div>
     <div id="conn-pill" class="pill off">Offline</div>
   </div>
@@ -305,6 +279,7 @@
 
   <div id="workspace">
     <div id="viewport">
+      <div id="view-hint" style="position:absolute;left:10px;bottom:10px;z-index:6;font-size:11px;color:#9ca3af;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;pointer-events:none;">Drag orbit · Pinch zoom · 2-finger pan</div>
       <div class="empty" id="empty-state">
         <h2>Design any robot</h2>
         <p>Start from a blueprint or build from scratch. Your robot will appear here.</p>
@@ -550,7 +525,711 @@
     </div>
   </div>
 
-<script type="importmap">
+
+  <script src="./vendor/three/three.min.js"></script>
+  <script>
+  /* VortexaCore — non-module UI + WS so Termux works even if ES modules fail */
+  (function(){
+    const WS_URLS = ['ws://127.0.0.1:8766','ws://localhost:8766','ws://127.0.0.1:8765','ws://localhost:8765'];
+    let ws = null, wsIdx = 0, retryTimer = null;
+    let topology = [], jointAngles = [], currentTemplateId = 'articulated_arm';
+    let tcpOffset = { xyz: [0,0,0.05], rpy: [0,0,0] };
+    let targetPos = [0.4, 0.0, 0.55];
+    let motionWaypoints = [];
+    let holdPose = null;
+    const listeners = { topology: [], status: [], message: [] };
+
+    function $(id){ return document.getElementById(id); }
+    function pillSet(text, ok){
+      const p = $('conn-pill');
+      if(!p) return;
+      p.textContent = text;
+      p.className = ok ? 'pill' : 'pill off';
+    }
+    function showStatus(headline, sub, type){
+      const box = $('friendly-status');
+      if(box){
+        box.innerHTML = '<div class="status-card '+(type||'')+'"><div class="headline">'+(headline||'')+
+          '</div><div class="sub">'+(sub||'')+'</div></div>';
+      }
+      console.log('[Vortexa]', headline, sub||'');
+    }
+    function send(obj){
+      if(ws && ws.readyState === 1){
+        ws.send(JSON.stringify(obj));
+        console.log('[Vortexa] send', obj.action);
+        return true;
+      }
+      showStatus('Not connected', 'Start server: python3 server.py (port 8766)', 'warn');
+      return false;
+    }
+    let didAutoLoad = false;
+    function connect(){
+      if(retryTimer){ clearTimeout(retryTimer); retryTimer = null; }
+      try{ if(ws && ws.readyState <= 1) ws.close(); }catch(e){}
+      const url = WS_URLS[wsIdx % WS_URLS.length];
+      pillSet('Connecting…', false);
+      try{ ws = new WebSocket(url); }catch(e){ wsIdx++; retryTimer=setTimeout(connect,1200); return; }
+      ws.onopen = function(){
+        pillSet('Connected', true);
+        console.log('[VortexaCore] open', url);
+        send({action:'health'});
+        setTimeout(function(){
+          if(!topology.length && !didAutoLoad){
+            didAutoLoad = true;
+            loadTemplate('articulated_arm');
+          } else if(topology.length && window.VortexaView){
+            try{ window.VortexaView.buildRobot(topology, jointAngles); }catch(e){}
+          }
+        }, 300);
+      };
+      ws.onclose = function(){
+        pillSet('Offline', false);
+        console.log('[VortexaCore] closed', url);
+        wsIdx++;
+        retryTimer=setTimeout(connect, 1200);
+      };
+      ws.onerror = function(){ console.warn('[VortexaCore] WS error', url); };
+      ws.onmessage = function(ev){
+        let data;
+        try{ data = JSON.parse(ev.data); }catch(e){ return; }
+        listeners.message.forEach(function(fn){ try{fn(data);}catch(e){} });
+        if(data.action === 'load_template' && data.status === 'success'){
+          topology = data.topology || [];
+          currentTemplateId = data.template_name || currentTemplateId;
+          const nDoF = topology.filter(function(l){ return l.type !== 'fixed'; }).length;
+          jointAngles = new Array(nDoF).fill(0);
+          if(nDoF >= 6){ jointAngles[1]=-0.6; jointAngles[2]=1.0; }
+          showStatus('Loaded: '+(data.template_name||'Robot'), topology.length+' parts · '+nDoF+' DoF', 'success');
+          const empty = $('empty-state'); if(empty) empty.style.display = topology.length ? 'none' : '';
+          listeners.topology.forEach(function(fn){ try{fn(topology, data);}catch(e){} });
+          if(window.VortexaView && window.VortexaView.buildRobot){
+            try{ window.VortexaView.buildRobot(topology, jointAngles); }catch(e){ console.warn(e); }
+          }
+          if(window._vortexaRedrawJoints) try{ window._vortexaRedrawJoints(); }catch(e){}
+        }
+        if(data.action === 'health' && data.status === 'success'){
+          showStatus('Vortexa online', 'v'+(data.version||'')+' · tap a blueprint', 'success');
+        }
+        if(data.action === 'validate_robot' && data.report){
+          const r = data.report;
+          const el = $('health-report');
+          if(el){
+            el.innerHTML = '<div class="grade">'+(r.grade||'?')+' <span style="font-size:14px">'+(r.score||0)+'/100</span></div>'+
+              '<div>'+(r.summary||'')+'</div><div><b>Ready:</b> '+((r.ready_for||[]).join(' · ')||'—')+'</div>';
+          }
+          showStatus('Health '+(r.grade||''), r.summary||'', r.score>=70?'success':'warn');
+        }
+        if(data.action === 'compile_urdf' && data.status === 'success'){
+          showStatus('URDF exported', data.message || data.path || 'OK', 'success');
+        }
+        if(data.action === 'export_ros2' && data.status === 'success'){
+          showStatus('ROS 2 package', data.message || data.path || 'OK', 'success');
+        }
+        if(data.action === 'export_mjcf' && data.status === 'success'){
+          showStatus('MuJoCo MJCF', data.message || data.path || 'OK', 'success');
+        }
+        if(data.action === 'export_usd' && data.status === 'success'){
+          showStatus('USD exported', data.message || data.path || 'OK', 'success');
+        }
+        if(data.action === 'compute_fk' && data.status === 'success'){
+          showStatus('Reach check', data.message || 'FK complete', 'success');
+        }
+        if(data.action === 'compute_ik' && data.status === 'success'){
+          if(data.joint_angles){ jointAngles = data.joint_angles; }
+          showStatus('IK solved', data.message || ('residual '+(data.residual!=null?data.residual:'')), 'success');
+          if(window.VortexaView && window.VortexaView.applyAngles) try{ window.VortexaView.applyAngles(jointAngles); }catch(e){}
+          else if(window.VortexaView) try{ window.VortexaView.buildRobot(topology, jointAngles); }catch(e){}
+          if(window._vortexaRedrawJoints) try{ window._vortexaRedrawJoints(); }catch(e){}
+        }
+        if(data.action === 'apply_preset' && data.joint_angles){
+          jointAngles = data.joint_angles;
+          showStatus('Preset', data.preset||'applied', 'success');
+          if(window.VortexaView) try{ window.VortexaView.buildRobot(topology, jointAngles); }catch(e){}
+        }
+        if(data.action === 'enrich_physics' && data.topology){
+          topology = data.topology;
+          showStatus('Physics enriched', data.message||'', 'success');
+          if(window.VortexaView) try{ window.VortexaView.buildRobot(topology, jointAngles); }catch(e){}
+        }
+        if(data.action === 'save_project' && data.status === 'success'){
+          showStatus('Project saved', data.message||data.path||'', 'success');
+        }
+        if(data.status === 'error'){
+          showStatus('Error', data.message || 'Request failed', 'warn');
+        }
+      };
+    }
+    function loadTemplate(name){
+      showStatus('Loading…', name, 'success');
+      if(name === 'blank'){
+        topology = [{id:0,name:'base_link',type:'fixed',length:0.1,radius:0.08,mass:2,parent:null,kind:'base'}];
+        jointAngles = [];
+        currentTemplateId = 'blank';
+        listeners.topology.forEach(function(fn){ try{fn(topology,{template_name:'blank'});}catch(e){} });
+        showStatus('Blank robot', 'Add parts from Build', 'success');
+        return;
+      }
+      currentTemplateId = name;
+      send({action:'load_template', template_name:name});
+    }
+    function showTab(name){
+      document.querySelectorAll('.dock-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===name); });
+      document.querySelectorAll('.dock-body').forEach(function(b){ b.style.display = 'none'; });
+      var tb = document.getElementById('tab-'+name);
+      if(tb) tb.style.display = 'block';
+    }
+    function setMode(mode){
+      document.querySelectorAll('.mode-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.mode===mode); });
+      var map = { object:'library', edit:'edit', sculpt:'sculpt', animate:'animate', control:'control' };
+      showTab(map[mode] || 'library');
+    }
+    function needRobot(){
+      if(!topology.length){ showStatus('No robot', 'Pick a blueprint or New Robot first', 'warn'); return false; }
+      return true;
+    }
+    function renderPartsLibrary(){
+      var root = $('parts-library');
+      if(!root) return;
+      var cats = {
+        structure: [['base_plate','Base','fixed',0.12,0.1],['link_tube','Tube Link','revolute',0.3,0.035],['link_box','Box Link','revolute',0.2,0.05]],
+        actuation: [['joint_rev','Revolute','revolute',0.08,0.04],['joint_pitch','Pitch','revolute',0.08,0.04],['servo','Servo','revolute',0.06,0.025]],
+        mobility: [['wheel','Wheel','continuous',0.04,0.08],['leg_hip','Leg Hip','revolute',0.08,0.035]],
+        sensing: [['imu','IMU','fixed',0.03,0.02],['camera','Camera','fixed',0.04,0.025]],
+        end_effectors: [['gripper','Gripper','revolute',0.1,0.04],['vacuum','Vacuum','fixed',0.06,0.04],['flange','Flange','fixed',0.04,0.045]]
+      };
+      var html = '';
+      Object.keys(cats).forEach(function(k){
+        html += '<div class="parts-cat"><h4>'+k+'</h4><div class="parts-grid">';
+        cats[k].forEach(function(p){
+          html += '<div class="part-btn" data-pid="'+p[0]+'" data-name="'+p[1]+'" data-type="'+p[2]+'" data-len="'+p[3]+'" data-rad="'+p[4]+'">'+p[1]+'</div>';
+        });
+        html += '</div></div>';
+      });
+      root.innerHTML = html;
+      root.querySelectorAll('.part-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          if(!topology.length){
+            topology = [{id:0,name:'base_link',type:'fixed',length:0.12,radius:0.09,mass:2,parent:null,kind:'base'}];
+          }
+          var id = topology.length;
+          topology.push({
+            id:id, name:(btn.dataset.name||'part').toLowerCase().replace(/\s+/g,'_')+'_'+id,
+            type: btn.dataset.type||'revolute', axis:'z',
+            length: parseFloat(btn.dataset.len)||0.2, radius: parseFloat(btn.dataset.rad)||0.04,
+            mass: 0.5, parent: id-1, material: 'aluminum'
+          });
+          var nDoF = topology.filter(function(l){ return l.type!=='fixed'; }).length;
+          jointAngles = new Array(nDoF).fill(0);
+          showStatus('Part added', btn.dataset.name+' · '+topology.length+' parts', 'success');
+          listeners.topology.forEach(function(fn){ try{fn(topology,{});}catch(e){} });
+          if(window.VortexaView) try{ window.VortexaView.buildRobot(topology, jointAngles); }catch(e){}
+          var ll = $('link-list');
+          if(ll) ll.innerHTML = topology.map(function(l,i){ return '<div>'+i+': '+(l.name||'')+' ('+l.type+')</div>'; }).join('');
+        });
+      });
+    }
+    function bindUI(){
+      document.querySelectorAll('.card[data-template]').forEach(function(card){
+        card.addEventListener('click', function(){
+          document.querySelectorAll('.card').forEach(function(c){ c.classList.remove('active'); });
+          card.classList.add('active');
+          loadTemplate(card.dataset.template);
+        });
+      });
+      document.querySelectorAll('.dock-tab').forEach(function(tab){
+        tab.addEventListener('click', function(){ showTab(tab.dataset.tab); });
+      });
+      document.querySelectorAll('.mode-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){ setMode(btn.dataset.mode); });
+      });
+      function bind(id, fn){ var el=$(id); if(el) el.addEventListener('click', fn); }
+
+      bind('btn-gallery', function(){ setMode('object'); showTab('library'); });
+      bind('btn-new', function(){ loadTemplate('blank'); });
+      bind('btn-fk', function(){ if(!needRobot()) return; send({action:'compute_fk', topology:topology, joint_angles:jointAngles, tcp_offset:tcpOffset}); });
+      bind('btn-ik', function(){ if(!needRobot()) return; send({action:'compute_ik', topology:topology, target:[0.4,0,0.55], joint_angles:jointAngles, tcp_offset:tcpOffset}); });
+      bind('btn-urdf', function(){ if(!needRobot()) return; send({action:'compile_urdf', topology:topology, robot_name:'vortexa_export'}); });
+      bind('btn-ros2', function(){ if(!needRobot()) return; send({action:'export_ros2', topology:topology, robot_name:'vortexa_robot'}); });
+      bind('btn-mjcf', function(){ if(!needRobot()) return; send({action:'export_mjcf', topology:topology, robot_name:'vortexa_robot'}); });
+      bind('btn-usd', function(){ if(!needRobot()) return; send({action:'export_usd', topology:topology, robot_name:'vortexa_robot'}); });
+      bind('btn-validate', function(){ if(!needRobot()) return; send({action:'validate_robot', topology:topology, robot_name:currentTemplateId||'custom'}); showTab('status'); });
+      bind('btn-health', function(){ send({action:'health'}); showTab('status'); });
+      bind('btn-enrich', function(){ if(!needRobot()) return; send({action:'enrich_physics', topology:topology}); });
+      bind('btn-save-project', function(){
+        if(!needRobot()) return;
+        var name = prompt('Project name', currentTemplateId||'my_robot') || 'my_robot';
+        send({action:'save_project', name:name, template:currentTemplateId, topology:topology, joint_angles:jointAngles, tcp:tcpOffset});
+      });
+      bind('btn-examples', function(){ send({action:'list_projects'}); showTab('status'); });
+      bind('btn-save', function(){
+        try{ localStorage.setItem('vortexa_design', JSON.stringify({topology:topology, jointAngles:jointAngles, template:currentTemplateId})); showStatus('Saved', 'Local design snapshot', 'success'); }
+        catch(e){ showStatus('Save failed', String(e), 'warn'); }
+      });
+      bind('btn-load', function(){
+        try{
+          var raw = localStorage.getItem('vortexa_design');
+          if(!raw){ showStatus('Nothing saved', 'Use Save first', 'warn'); return; }
+          var d = JSON.parse(raw);
+          topology = d.topology||[]; jointAngles = d.jointAngles||[]; currentTemplateId = d.template||'custom';
+          showStatus('Loaded', topology.length+' parts', 'success');
+          listeners.topology.forEach(function(fn){ try{fn(topology,{});}catch(e){} });
+          if(window.VortexaView) try{ window.VortexaView.buildRobot(topology, jointAngles); }catch(e){}
+        }catch(e){ showStatus('Load failed', String(e), 'warn'); }
+      });
+      bind('btn-cart', function(){ if(!needRobot()) return; send({action:'plan_cartesian', topology:topology, joint_angles:jointAngles, target:[0.4,0,0.55]}); });
+      bind('btn-traj', function(){ if(!needRobot()) return; send({action:'plan_cartesian', topology:topology, joint_angles:jointAngles, target:[0.35,0.1,0.5]}); });
+      bind('btn-collision', function(){ if(!needRobot()) return; send({action:'collision_check', topology:topology, joint_angles:jointAngles}); });
+      bind('btn-import', function(){ showTab('status'); showStatus('Import', 'Use Status panel or paste URDF later', 'success'); });
+
+      // command chips
+      bind('cmd-home', function(){ if(!needRobot()) return; send({action:'apply_preset', template_name:currentTemplateId, preset:'home', topology:topology}); });
+      bind('cmd-stow', function(){ if(!needRobot()) return; send({action:'apply_preset', template_name:currentTemplateId, preset:'stow', topology:topology}); });
+      bind('cmd-hold', function(){ showStatus('Hold', 'Holding pose', 'success'); });
+      bind('cmd-stop', function(){ showStatus('Stop', 'Motion halted', 'warn'); });
+
+      // --- Control panel (investor-ready autonomy) ---
+      function readTcp(){
+        return {
+          xyz: [
+            parseFloat(($('tcp-x')&&$('tcp-x').value)||0)||0,
+            parseFloat(($('tcp-y')&&$('tcp-y').value)||0)||0,
+            parseFloat(($('tcp-z')&&$('tcp-z').value)||0.05)||0.05
+          ],
+          rpy: [0,0,0]
+        };
+      }
+      function redrawJoints(){
+        if(window.VortexaView){
+          try{ window.VortexaView.buildRobot(topology, jointAngles); }catch(e){}
+        }
+        var box = $('joint-sliders');
+        if(box){
+          box.innerHTML = '';
+          var j = 0;
+          topology.forEach(function(link){
+            if(link.type==='fixed') return;
+            var idx = j++;
+            var lim = link.limit || {};
+            var lo = lim.lower!=null?Number(lim.lower):-3.14;
+            var hi = lim.upper!=null?Number(lim.upper):3.14;
+            var val = jointAngles[idx]!=null?jointAngles[idx]:0;
+            var row = document.createElement('div');
+            row.className = 'joint';
+            row.innerHTML = '<label>J'+idx+'</label><input type="range" min="'+lo+'" max="'+hi+'" step="0.01" value="'+val+'"><span class="val">'+val.toFixed(2)+'</span>';
+            var inp = row.querySelector('input');
+            var sp = row.querySelector('.val');
+            inp.oninput = function(){
+              jointAngles[idx] = parseFloat(inp.value);
+              sp.textContent = jointAngles[idx].toFixed(2);
+              if(window.VortexaView && window.VortexaView.applyAngles) try{ window.VortexaView.applyAngles(jointAngles); }catch(e){ window.VortexaView.buildRobot(topology, jointAngles); }
+            };
+            box.appendChild(row);
+          });
+        }
+      }
+      function applyJoints(angs, label){
+        if(!angs || !angs.length) return;
+        jointAngles = angs.slice();
+        redrawJoints();
+        showStatus(label||'Pose', 'Joints updated', 'success');
+      }
+      function jog(dx, dy, dz){
+        if(!needRobot()) return;
+        targetPos = [targetPos[0]+dx, targetPos[1]+dy, targetPos[2]+dz];
+        showStatus('Jog', 'Target '+targetPos.map(function(v){return v.toFixed(3);}).join(', '), 'success');
+        send({action:'compute_ik', topology:topology, target:targetPos, joint_angles:jointAngles, tcp_offset:tcpOffset});
+      }
+      function homePose(){
+        if(!needRobot()) return;
+        // Prefer server preset; fallback zero pose
+        if(!send({action:'apply_preset', template_name:currentTemplateId, preset:'home', topology:topology})){
+          applyJoints(jointAngles.map(function(){ return 0; }), 'Home (local)');
+        }
+      }
+      function stowPose(){
+        if(!needRobot()) return;
+        if(!send({action:'apply_preset', template_name:currentTemplateId, preset:'stow', topology:topology})){
+          var stow = jointAngles.map(function(_,i){ return (i===1)?-1.2:((i===2)?1.5:0); });
+          applyJoints(stow, 'Stow (local)');
+        }
+      }
+
+      bind('btn-tcp', function(){
+        tcpOffset = readTcp();
+        showStatus('TCP applied', 'Offset ['+tcpOffset.xyz.map(function(v){return v.toFixed(3);}).join(', ')+']', 'success');
+        if(topology.length) send({action:'compute_fk', topology:topology, joint_angles:jointAngles, tcp_offset:tcpOffset});
+      });
+      bind('cmd-home', homePose);
+      bind('cmd-stow', stowPose);
+      bind('cmd-hold', function(){
+        if(!needRobot()) return;
+        holdPose = jointAngles.slice();
+        showStatus('Hold', 'Pose locked ('+holdPose.length+' joints)', 'success');
+      });
+      bind('cmd-stop', function(){
+        showStatus('Stop', 'Motion cancelled · holding last pose', 'warn');
+      });
+      bind('jog-x+', function(){ jog(0.02,0,0); });
+      bind('jog-x-', function(){ jog(-0.02,0,0); });
+      bind('jog-y+', function(){ jog(0,0.02,0); });
+      bind('jog-y-', function(){ jog(0,-0.02,0); });
+      bind('jog-z+', function(){ jog(0,0,0.02); });
+      bind('jog-z-', function(){ jog(0,0,-0.02); });
+      bind('btn-collision', function(){ if(!needRobot()) return; send({action:'collision_check', topology:topology, joint_angles:jointAngles}); });
+      bind('btn-add-target', function(){
+        if(!needRobot()) return;
+        motionWaypoints.push({ joints: jointAngles.slice(), target: targetPos.slice() });
+        showStatus('Waypoint', motionWaypoints.length+' poses in sequence', 'success');
+      });
+      bind('btn-save-motion', function(){
+        if(!motionWaypoints.length){ showStatus('No waypoints', 'Add Target first', 'warn'); return; }
+        try{
+          localStorage.setItem('vortexa_motion', JSON.stringify(motionWaypoints));
+          showStatus('Sequence saved', motionWaypoints.length+' waypoints (device)', 'success');
+        }catch(e){ showStatus('Save failed', String(e), 'warn'); }
+        send({action:'save_motion', name: currentTemplateId+'_seq', waypoints: motionWaypoints, topology:topology});
+      });
+      bind('btn-list-motion', function(){
+        var n = motionWaypoints.length;
+        try{ var s = JSON.parse(localStorage.getItem('vortexa_motion')||'[]'); n = Math.max(n, s.length); }catch(e){}
+        showStatus('Motions', n+' waypoint(s) available', 'success');
+      });
+      bind('btn-dual-ik', function(){
+        if(!needRobot()) return;
+        send({action:'compute_ik', topology:topology, target:targetPos, joint_angles:jointAngles, tcp_offset:tcpOffset, dual:true});
+      });
+      bind('btn-traj-csv', function(){
+        if(!needRobot()) return;
+        send({action:'export_trajectory_csv', topology:topology, joint_angles:jointAngles, waypoints: motionWaypoints});
+      });
+      // preset chips
+      document.querySelectorAll('.preset-chip, [data-preset]').forEach(function(ch){
+        ch.addEventListener('click', function(){
+          if(!needRobot()) return;
+          var p = ch.dataset.preset || ch.textContent.trim().toLowerCase();
+          send({action:'apply_preset', template_name:currentTemplateId, preset:p, topology:topology});
+        });
+      });
+      // scene helpers
+      bind('scene-table', function(){ send({action:'scene_add', object:'table'}); showStatus('Scene', 'Table added', 'success'); });
+      bind('scene-box', function(){ send({action:'scene_add', object:'box'}); showStatus('Scene', 'Box added', 'success'); });
+      bind('scene-clear', function(){ send({action:'scene_add', object:'clear'}); showStatus('Scene', 'Cleared', 'success'); });
+
+      // expose for message handlers
+      window._vortexaRedrawJoints = redrawJoints;
+
+      var pill = $('conn-pill');
+      if(pill){ pill.style.cursor='pointer'; pill.addEventListener('click', function(){ wsIdx=0; connect(); }); }
+      renderPartsLibrary();
+    }
+
+    window.VortexaCore = {
+      send: send,
+      connect: connect,
+      loadTemplate: loadTemplate,
+      getTopology: function(){ return topology; },
+      getJoints: function(){ return jointAngles; },
+      setJoints: function(a){ jointAngles = a || []; },
+      getTemplateId: function(){ return currentTemplateId; },
+      onTopology: function(fn){ listeners.topology.push(fn); },
+      onMessage: function(fn){ listeners.message.push(fn); },
+      showStatus: showStatus,
+      getTcp: function(){ return tcpOffset; }
+    };
+
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', function(){ bindUI(); connect(); });
+    } else { bindUI(); connect(); }
+  })();
+  </script>
+
+  
+  <script>
+  /* VortexaView — non-module 3D using global THREE (three.min.js) */
+  (function(){
+    if (typeof THREE === 'undefined') {
+      console.error('[VortexaView] THREE missing');
+      return;
+    }
+    const viewport = document.getElementById('viewport');
+    if (!viewport) return;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0d0d0d);
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.01, 50);
+    camera.position.set(1.6, 1.2, 1.8);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    viewport.appendChild(renderer.domElement);
+
+    scene.add(new THREE.GridHelper(5, 50, 0x333333, 0x222222));
+    scene.add(new THREE.AxesHelper(0.35));
+    scene.add(new THREE.AmbientLight(0x888888, 1.1));
+    const d1 = new THREE.DirectionalLight(0xffffff, 1.1);
+    d1.position.set(3, 5, 2);
+    scene.add(d1);
+
+    let robotGroup = new THREE.Group();
+    scene.add(robotGroup);
+    let targetMesh = null;
+    let pivots = [];
+
+    // Orbit / pan / zoom — mouse + touch (pinch)
+    let dragging = false, panning = false, px = 0, py = 0;
+    let theta = 0.8, phi = 0.9, radius = 2.4;
+    let targetY = 0.5;
+    let look = new THREE.Vector3(0, targetY, 0);
+    let pinchStart = 0, radiusStart = 2.4;
+    const pointers = new Map();
+    function updateCam(){
+      look.y = targetY;
+      camera.position.set(
+        look.x + radius * Math.sin(phi) * Math.cos(theta),
+        look.y + radius * Math.cos(phi),
+        look.z + radius * Math.sin(phi) * Math.sin(theta)
+      );
+      camera.lookAt(look);
+    }
+    updateCam();
+    function pointerCount(){ return pointers.size; }
+    function avgPointer(){
+      let x=0,y=0,n=0;
+      pointers.forEach(function(p){ x+=p.x; y+=p.y; n++; });
+      return n?{x:x/n,y:y/n}:{x:0,y:0};
+    }
+    function pinchDist(){
+      const arr = Array.from(pointers.values());
+      if(arr.length<2) return 0;
+      const dx = arr[0].x-arr[1].x, dy = arr[0].y-arr[1].y;
+      return Math.hypot(dx,dy);
+    }
+    const el = renderer.domElement;
+    el.style.touchAction = 'none';
+    let lastMid = null;
+    el.addEventListener('pointerdown', function(e){
+      e.preventDefault();
+      pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+      try { el.setPointerCapture(e.pointerId); } catch(err){}
+      px = e.clientX; py = e.clientY;
+      if(pointerCount()===1){
+        dragging = !(e.button===1 || e.button===2 || e.shiftKey);
+        panning = (e.button===1 || e.button===2 || e.shiftKey);
+        lastMid = null;
+      } else if(pointerCount()>=2){
+        dragging = false; panning = true;
+        pinchStart = pinchDist();
+        radiusStart = radius;
+        lastMid = avgPointer();
+      }
+    }, { passive: false });
+    el.addEventListener('pointermove', function(e){
+      if(!pointers.has(e.pointerId)) return;
+      e.preventDefault();
+      const prev = pointers.get(e.pointerId);
+      pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+      if(pointerCount()>=2){
+        const d = pinchDist();
+        if(pinchStart>10){
+          radius = Math.max(0.4, Math.min(14, radiusStart * (pinchStart / Math.max(d,1))));
+        }
+        const mid = avgPointer();
+        if(lastMid){
+          const mdx = mid.x - lastMid.x, mdy = mid.y - lastMid.y;
+          const panScale = radius * 0.002;
+          look.x -= Math.cos(theta) * mdx * panScale;
+          look.z -= Math.sin(theta) * mdx * panScale;
+          targetY += mdy * panScale;
+          look.y = targetY;
+        }
+        lastMid = mid;
+        updateCam();
+        return;
+      }
+      if(pointerCount()!==1) return;
+      const dx = e.clientX - px, dy = e.clientY - py;
+      px = e.clientX; py = e.clientY;
+      if(panning){
+        const panScale = radius * 0.002;
+        look.x -= Math.cos(theta) * dx * panScale;
+        look.z -= Math.sin(theta) * dx * panScale;
+        targetY += dy * panScale;
+        look.y = targetY;
+        updateCam();
+      } else if(dragging){
+        theta -= dx * 0.012;
+        phi = Math.max(0.12, Math.min(Math.PI - 0.12, phi + dy * 0.012));
+        updateCam();
+      }
+    }, { passive: false });
+    function endPointer(e){
+      pointers.delete(e.pointerId);
+      if(pointerCount()===0){ dragging=false; panning=false; }
+    }
+    el.addEventListener('pointerup', endPointer);
+    el.addEventListener('pointercancel', endPointer);
+    el.addEventListener('wheel', function(e){
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 1.08 : 0.92;
+      radius = Math.max(0.4, Math.min(14, radius * factor));
+      updateCam();
+    }, { passive: false });
+    el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+
+    function resize(){
+      const w = viewport.clientWidth || 300;
+      const h = viewport.clientHeight || 300;
+      camera.aspect = w / Math.max(h, 1);
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h, false);
+    }
+    window.addEventListener('resize', resize);
+    setTimeout(resize, 50);
+    setTimeout(resize, 300);
+
+    function mat(color, metal, rough){
+      return new THREE.MeshStandardMaterial({ color: color, metalness: metal, roughness: rough });
+    }
+    function clearRobot(){
+      scene.remove(robotGroup);
+      robotGroup = new THREE.Group();
+      scene.add(robotGroup);
+      pivots = [];
+    }
+    function buildRobot(topology, angles){
+      clearRobot();
+      if (!topology || !topology.length) return;
+      const empty = document.getElementById('empty-state');
+      if (empty) empty.style.display = 'none';
+
+      let parent = robotGroup;
+      // map robot Z-up to Three Y-up
+      robotGroup.rotation.x = -Math.PI / 2;
+      let aIdx = 0;
+      const angs = angles || [];
+
+      topology.forEach(function(link, i){
+        const len = Math.max(0.04, Number(link.length) || 0.2);
+        const rad = Math.max(0.015, Number(link.radius) || 0.04);
+        const isFixed = link.type === 'fixed';
+        const pivot = new THREE.Object3D();
+        parent.add(pivot);
+
+        if (i === 0 && isFixed) {
+          const pedestal = new THREE.Mesh(
+            new THREE.CylinderGeometry(rad * 1.6, rad * 1.9, Math.max(len, 0.1), 24),
+            mat(0x1f2937, 0.5, 0.4)
+          );
+          pedestal.rotation.x = Math.PI / 2;
+          pedestal.position.z = Math.max(len, 0.1) / 2;
+          pivot.add(pedestal);
+        } else {
+          const joint = new THREE.Mesh(
+            new THREE.SphereGeometry(rad * 1.3, 16, 16),
+            mat(isFixed ? 0x4b5563 : 0xf59e0b, 0.8, 0.25)
+          );
+          pivot.add(joint);
+          const geo = new THREE.CylinderGeometry(rad * 0.75, rad * 0.9, len, 16);
+          geo.rotateX(Math.PI / 2);
+          geo.translate(0, 0, len / 2);
+          pivot.add(new THREE.Mesh(geo, mat(isFixed ? 0x374151 : 0x9ca3af, 0.65, 0.3)));
+        }
+
+        if (!isFixed) {
+          const axis = (link.axis || 'z').toLowerCase();
+          const a = angs[aIdx] != null ? angs[aIdx] : 0;
+          if (axis === 'x') pivot.rotation.x = a;
+          else if (axis === 'y') pivot.rotation.y = a;
+          else pivot.rotation.z = a;
+          pivots.push({ pivot: pivot, axis: axis, index: aIdx });
+          aIdx++;
+        }
+
+        const next = new THREE.Object3D();
+        next.position.z = len;
+        pivot.add(next);
+        parent = next;
+      });
+
+      // frame
+      try {
+        const box = new THREE.Box3().setFromObject(robotGroup);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const maxD = Math.max(size.x, size.y, size.z, 0.4);
+        radius = Math.max(1.2, maxD * 2.2);
+        look.copy(center);
+        targetY = center.y;
+        updateCam();
+      } catch(e) {}
+    }
+
+    function applyAngles(angles){
+      if (!pivots.length || !angles) return;
+      pivots.forEach(function(p){
+        const a = angles[p.index] || 0;
+        p.pivot.rotation.set(0,0,0);
+        if (p.axis === 'x') p.pivot.rotation.x = a;
+        else if (p.axis === 'y') p.pivot.rotation.y = a;
+        else p.pivot.rotation.z = a;
+      });
+    }
+
+    function ensureTarget(pos){
+      if (!targetMesh) {
+        targetMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(0.03, 12, 12),
+          new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0ea5e9, emissiveIntensity: 0.4 })
+        );
+        // axes
+        targetMesh.add(new THREE.AxesHelper(0.12));
+        scene.add(targetMesh);
+      }
+      if (pos && pos.length >= 3) {
+        // robot Z-up -> three Y-up
+        targetMesh.position.set(pos[0], pos[2], pos[1]);
+      }
+    }
+
+    function loop(){
+      requestAnimationFrame(loop);
+      renderer.render(scene, camera);
+    }
+    loop();
+
+    function refreshFromCore(){
+      if (!window.VortexaCore) return;
+      const topo = window.VortexaCore.getTopology();
+      const angs = window.VortexaCore.getJoints();
+      if (topo && topo.length) buildRobot(topo, angs);
+    }
+
+    if (window.VortexaCore) {
+      window.VortexaCore.onTopology(function(topo){
+        buildRobot(topo, window.VortexaCore.getJoints());
+      });
+      window.VortexaCore.onMessage(function(data){
+        if (data.action === 'compute_ik' && data.joint_angles) {
+          window.VortexaCore.setJoints(data.joint_angles);
+          applyAngles(data.joint_angles);
+        }
+        if (data.action === 'compute_fk' && data.joint_angles) {
+          applyAngles(data.joint_angles);
+        }
+        if (data.end_effector_position) {
+          ensureTarget(data.end_effector_position);
+        }
+      });
+      setTimeout(refreshFromCore, 500);
+      setTimeout(refreshFromCore, 1200);
+    }
+
+    window.VortexaView = { buildRobot: buildRobot, applyAngles: applyAngles, resize: resize };
+    console.log('[VortexaView] ready');
+  })();
+  </script>
+
+  <script type="importmap">
   {
     "imports": {
       "three": "./vendor/three/three.module.js",
@@ -1308,11 +1987,13 @@
       };
     }
     function send(obj) {
+      if (window.VortexaCore && window.VortexaCore.send) {
+        return window.VortexaCore.send(obj);
+      }
       if (ws && ws.readyState === 1) {
         ws.send(JSON.stringify(obj));
         console.log('[Vortexa] send', obj.action || obj);
       } else {
-        console.warn('[Vortexa] send failed', obj.action, 'ws state', ws && ws.readyState);
         showStatus('Not connected', 'Tap the Offline pill or run: python3 server.py', 'warn');
       }
     }
@@ -1625,8 +2306,41 @@
 
     function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
     animate();
-    connect();
-    setTimeout(() => { if (!topology.length) loadTemplate('articulated_arm'); }, 700);
+    // Prefer VortexaCore WS (non-module) — module only renders
+    if (window.VortexaCore) {
+      window.VortexaCore.onTopology(function(topo, data) {
+        topology = topo || [];
+        if (data) {
+          chainList = data.chains || chainList;
+          activeChain = data.active_chain || null;
+          allChains = data.all_chains || null;
+          chainOrigins = data.chain_origins || chainOrigins;
+          if (data.tcp_offset) tcpOffset = data.tcp_offset;
+        }
+        const nDoF = topology.filter(l => l.type !== 'fixed').length;
+        jointAngles = (window.VortexaCore.getJoints && window.VortexaCore.getJoints().length === nDoF)
+          ? window.VortexaCore.getJoints().slice()
+          : new Array(nDoF).fill(0);
+        if (nDoF >= 6 && jointAngles.every(x => x === 0)) { jointAngles[1] = -0.6; jointAngles[2] = 1.0; }
+        buildSliders(); buildLinkList(); buildRobotVisual(topology);
+        try { renderChainSelect(); } catch (e) {}
+        if (emptyState) emptyState.style.display = topology.length ? 'none' : '';
+      });
+      window.VortexaCore.onMessage(function(data) {
+        try { humanizeResponse(data); } catch (e) {}
+      });
+      // Initial topology if core already loaded
+      const t0 = window.VortexaCore.getTopology();
+      if (t0 && t0.length) {
+        topology = t0;
+        buildSliders(); buildLinkList(); buildRobotVisual(topology);
+        if (emptyState) emptyState.style.display = 'none';
+      }
+    } else {
+      connect();
+      setTimeout(() => { if (!topology.length) loadTemplate('articulated_arm'); }, 700);
+    }
+
   
     // --- v3: Import URDF + Motion program ---
     let motionWaypoints = [];
@@ -1670,7 +2384,7 @@
     const _prevHandle = typeof handleServerMessage === 'function' ? handleServerMessage : null;
 
 
-    // ===== TexaKit parts library + workspaces (v3.5.4) =====
+    // ===== TexaKit parts library + workspaces (v3.5.10) =====
     const PARTS_FALLBACK = {"version": "3.1", "description": "TexaKit parts \u2014 everything to build a robot from scratch", "categories": {"structure": {"label": "Structure", "parts": [{"id": "base_plate", "name": "Base Plate", "kind": "base", "type": "fixed", "length": 0.12, "radius": 0.1, "mass": 2.5, "icon": "#"}, {"id": "link_tube", "name": "Tube Link", "kind": "link", "type": "revolute", "length": 0.3, "radius": 0.035, "mass": 0.8, "icon": "+"}, {"id": "link_box", "name": "Box Link", "kind": "link", "type": "revolute", "length": 0.2, "radius": 0.05, "mass": 1.0, "icon": "\u25a1"}, {"id": "spacer", "name": "Spacer", "kind": "link", "type": "fixed", "length": 0.05, "radius": 0.03, "mass": 0.15, "icon": "\u2013"}, {"id": "bracket_l", "name": "L-Bracket", "kind": "link", "type": "fixed", "length": 0.08, "radius": 0.025, "mass": 0.2, "icon": "\u2310"}, {"id": "chassis", "name": "Chassis Frame", "kind": "base", "type": "fixed", "length": 0.2, "radius": 0.15, "mass": 3.0, "icon": "\u25a6"}, {"id": "torso_shell", "name": "Torso Shell", "kind": "link", "type": "fixed", "length": 0.28, "radius": 0.12, "mass": 4.0, "icon": "O"}]}, "actuation": {"label": "Actuation", "parts": [{"id": "joint_rev", "name": "Revolute Joint", "kind": "joint", "type": "revolute", "axis": "z", "length": 0.08, "radius": 0.04, "mass": 0.4, "icon": "o"}, {"id": "joint_rev_y", "name": "Pitch Joint", "kind": "joint", "type": "revolute", "axis": "y", "length": 0.08, "radius": 0.04, "mass": 0.4, "icon": "\u21bb"}, {"id": "joint_rev_x", "name": "Roll Joint", "kind": "joint", "type": "revolute", "axis": "x", "length": 0.08, "radius": 0.04, "mass": 0.4, "icon": "\u27f3"}, {"id": "joint_prism", "name": "Prismatic Joint", "kind": "joint", "type": "prismatic", "axis": "z", "length": 0.15, "radius": 0.03, "mass": 0.5, "icon": "\u2195"}, {"id": "servo_std", "name": "Standard Servo", "kind": "joint", "type": "revolute", "axis": "z", "length": 0.06, "radius": 0.025, "mass": 0.12, "icon": "S"}, {"id": "motor_hub", "name": "Motor Hub", "kind": "joint", "type": "continuous", "axis": "z", "length": 0.05, "radius": 0.04, "mass": 0.3, "icon": "M"}, {"id": "gearbox", "name": "Gearbox", "kind": "link", "type": "fixed", "length": 0.07, "radius": 0.045, "mass": 0.6, "icon": "\u2699"}]}, "mobility": {"label": "Mobility", "parts": [{"id": "wheel_diff", "name": "Drive Wheel", "kind": "wheel", "type": "continuous", "axis": "y", "length": 0.04, "radius": 0.08, "mass": 0.5, "icon": "\u25ce"}, {"id": "wheel_omni", "name": "Omni Wheel", "kind": "wheel", "type": "continuous", "axis": "y", "length": 0.03, "radius": 0.06, "mass": 0.35, "icon": "\u25c9"}, {"id": "caster", "name": "Caster", "kind": "wheel", "type": "fixed", "length": 0.03, "radius": 0.03, "mass": 0.1, "icon": "\u00b0"}, {"id": "track_seg", "name": "Track Segment", "kind": "link", "type": "fixed", "length": 0.12, "radius": 0.04, "mass": 0.4, "icon": "\u2261"}, {"id": "leg_hip", "name": "Leg Hip", "kind": "joint", "type": "revolute", "axis": "z", "length": 0.08, "radius": 0.035, "mass": 0.35, "icon": "\u2227"}, {"id": "leg_knee", "name": "Leg Knee", "kind": "joint", "type": "revolute", "axis": "y", "length": 0.14, "radius": 0.03, "mass": 0.4, "icon": "\u2220"}, {"id": "prop_arm", "name": "Prop Arm", "kind": "link", "type": "fixed", "length": 0.22, "radius": 0.015, "mass": 0.08, "icon": "\u2013"}, {"id": "rotor_hub", "name": "Rotor Hub", "kind": "joint", "type": "continuous", "axis": "z", "length": 0.03, "radius": 0.025, "mass": 0.05, "icon": "\u2726"}]}, "sensing": {"label": "Sensing", "parts": [{"id": "imu_link", "name": "IMU", "kind": "sensor", "type": "fixed", "length": 0.03, "radius": 0.02, "mass": 0.02, "icon": "\u25ce", "sensor": "imu"}, {"id": "rgb_camera", "name": "RGB Camera", "kind": "sensor", "type": "fixed", "length": 0.04, "radius": 0.025, "mass": 0.08, "icon": "\u25a3", "sensor": "camera"}, {"id": "depth_camera", "name": "Depth Camera", "kind": "sensor", "type": "fixed", "length": 0.05, "radius": 0.03, "mass": 0.15, "icon": "\u25eb", "sensor": "depth"}, {"id": "lidar_2d", "name": "2D LiDAR", "kind": "sensor", "type": "fixed", "length": 0.04, "radius": 0.04, "mass": 0.2, "icon": "\u25cd", "sensor": "lidar"}, {"id": "force_torque", "name": "F/T Sensor", "kind": "sensor", "type": "fixed", "length": 0.03, "radius": 0.035, "mass": 0.12, "icon": "\u2696", "sensor": "ft"}, {"id": "encoder", "name": "Encoder", "kind": "sensor", "type": "fixed", "length": 0.02, "radius": 0.02, "mass": 0.03, "icon": "\u2300", "sensor": "encoder"}]}, "power": {"label": "Power & Compute", "parts": [{"id": "battery_pack", "name": "Battery Pack", "kind": "power", "type": "fixed", "length": 0.1, "radius": 0.05, "mass": 1.2, "icon": "\u25ae"}, {"id": "pdu", "name": "Power Dist.", "kind": "power", "type": "fixed", "length": 0.06, "radius": 0.04, "mass": 0.25, "icon": "\u26a1"}, {"id": "mcu_board", "name": "MCU Board", "kind": "compute", "type": "fixed", "length": 0.05, "radius": 0.04, "mass": 0.08, "icon": "\u29c9"}, {"id": "sbc", "name": "SBC (Pi/Jetson)", "kind": "compute", "type": "fixed", "length": 0.08, "radius": 0.05, "mass": 0.2, "icon": "\u25a3"}, {"id": "motor_driver", "name": "Motor Driver", "kind": "power", "type": "fixed", "length": 0.05, "radius": 0.03, "mass": 0.1, "icon": "\u25b7"}]}, "end_effectors": {"label": "End Effectors", "parts": [{"id": "parallel_gripper", "name": "Parallel Gripper", "kind": "gripper", "type": "revolute", "axis": "z", "length": 0.1, "radius": 0.04, "mass": 0.35, "icon": "[]"}, {"id": "vacuum_cup", "name": "Vacuum Cup", "kind": "gripper", "type": "fixed", "length": 0.06, "radius": 0.04, "mass": 0.15, "icon": "\u222a"}, {"id": "tool_flange", "name": "Tool Flange", "kind": "flange", "type": "fixed", "length": 0.04, "radius": 0.045, "mass": 0.2, "icon": "\u2299"}, {"id": "suction_array", "name": "Suction Array", "kind": "gripper", "type": "fixed", "length": 0.08, "radius": 0.06, "mass": 0.4, "icon": "\u2237"}, {"id": "magnetic_ee", "name": "Magnetic EE", "kind": "gripper", "type": "fixed", "length": 0.05, "radius": 0.04, "mass": 0.25, "icon": "\u78c1"}, {"id": "welding_torch", "name": "Weld Torch", "kind": "tool", "type": "fixed", "length": 0.18, "radius": 0.025, "mass": 0.5, "icon": "T"}]}}, "materials": [{"id": "aluminum", "name": "Aluminum", "density": 2700, "color": "#9ca3af"}, {"id": "carbon", "name": "Carbon Fiber", "density": 1600, "color": "#1f2937"}, {"id": "titanium", "name": "Titanium", "density": 4500, "color": "#94a3b8"}, {"id": "plastic", "name": "Engineering Plastic", "density": 1400, "color": "#f59e0b"}, {"id": "steel", "name": "Steel", "density": 7850, "color": "#6b7280"}, {"id": "abs", "name": "ABS", "density": 1050, "color": "#38bdf8"}]};
 
     function loadPartsCatalog() {
@@ -1983,7 +2697,7 @@
     loadPartsCatalog();
 
 
-    // ===== v3.5.4 — validate, projects, scene, mesh, first-run, dual-arm =====
+    // ===== v3.5.10 — validate, projects, scene, mesh, first-run, dual-arm =====
     let sceneObjects = [];
     let sceneGroup = null;
 
