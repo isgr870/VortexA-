@@ -7,7 +7,7 @@ jobs:
   note:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Publish packaging guide
         run: |
           mkdir -p dist-android
