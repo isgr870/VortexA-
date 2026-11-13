@@ -474,6 +474,8 @@ async def handle_client(websocket):
                     response = {
                         "status": "success",
                         "action": "collision_check",
+                        "experimental": True,
+                        "disclaimer": "Sphere heuristic along chain axis — not pose-complete; do not use for safety decisions.",
                         "spheres": spheres,
                         "collisions": collisions,
                         "has_collision": len(collisions) > 0,
@@ -640,6 +642,7 @@ async def handle_client(websocket):
                         "action": "health",
                         "version": APP_VERSION,
                         "token": SESSION_TOKEN,
+                        "product_stage": "early_design_studio",
                         "texakit": "3.1",
                         "templates": [p.stem for p in TEMPLATES_DIR.glob("*.json")],
                     }

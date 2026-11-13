@@ -1,14 +1,14 @@
 # Changelog
 
+## 3.6.2 — 2026-11-13
+- Investor-facing docs: ROADMAP, PRODUCT brief, Code of Conduct
+- Collision API marked experimental with explicit disclaimer
+- Health reports include structural-heuristic note
+- pytest.ini (asyncio scope); version 3.6.2
+
 ## 3.6.1 — 2026-11-13
-### Production readiness
-- Expanded pytest suite (kinematics, exports, security)
-- CI matrix Python 3.11/3.12 + hygiene job (blocks tracked `~/`)
-- Dependabot, issue/PR templates, SECURITY.md
-- Professional README with badges and honest scope
-- docs/ARCHITECTURE.md, docs/SECURITY_MODEL.md
-- Hardened .gitignore (exports, session, personal paths)
+- pytest suite, CI matrix, hygiene job, Dependabot, issue/PR templates
+- SECURITY.md, architecture docs, professional README
 
 ## 3.6.0 — 2026-11-13
-- P0 security: localhost default, session token, path containment
-- Desktop in-process launcher; Win/Linux/macOS build workflows
+- P0 security + desktop packaging fix

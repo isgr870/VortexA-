@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/isgr870/VortexA-/actions/workflows/ci.yml/badge.svg)](https://github.com/isgr870/VortexA-/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-3.6.1-informational)](VERSION)
+[![Version](https://img.shields.io/badge/version-3.6.2-informational)](VERSION)
 
 **Offline-first robot design studio** for phone, desktop, and web.  
 Author manipulators and mobile robots → validate structure → export **URDF · ROS 2 · MuJoCo · USD**.
@@ -56,6 +56,9 @@ docs/                  Architecture & security model
 - Path containment for reads/writes  
 
 See [SECURITY.md](SECURITY.md) and [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md).
+
+## Roadmap
+See [ROADMAP.md](ROADMAP.md) and [docs/PRODUCT.md](docs/PRODUCT.md).
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md). Open issues with the templates under `.github/ISSUE_TEMPLATE/`.
