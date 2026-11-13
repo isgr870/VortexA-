@@ -1,24 +1,43 @@
+# Python
 __pycache__/
 *.py[cod]
+*.egg-info/
 .venv/
 venv/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Runtime / local
 .env
-projects/*
-!projects/.gitkeep
-urdf/*
-!urdf/.gitkeep
 *.log
 server.log
 http.log
 vortexa_ws.pid
 vortexa_http.pid
-.DS_Store
-*.zip
-VortexA-*.zip
+config/session.json
+
+# Generated exports (keep directory)
+urdf/*
+!urdf/.gitkeep
+projects/*
+!projects/.gitkeep
+
+# Packaging
 dist/
 build/
-*.egg-info/
+*.spec
 node_modules/
-.android/
-.capacitor/
-ios/App/Pods/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Personal / machine paths must never be tracked
+~/
+~/**
+VortexA-*.zip
+*.zip

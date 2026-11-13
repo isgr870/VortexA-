@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+texup text eol=lf
+texoff text eol=lf
+*.png binary
+*.jpg binary
+*.js text eol=lf

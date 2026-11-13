@@ -1,4 +1,0 @@
-#!/data/data/com.termux/files/usr/bin/bash
-pkill -f "python3 server.py" 2>/dev/null
-pkill -f "http.server 8080" 2>/dev/null
-echo "Vortexa Studio stopped"

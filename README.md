@@ -1,49 +1,64 @@
 # Vortexa Studio
 
-**Offline-first robot design studio** for phone, PC, and web.  
-Author manipulators, mobile robots, humanoids, and drones — validate for simulation — export **URDF · ROS 2 · MuJoCo · USD**.
+[![CI](https://github.com/isgr870/VortexA-/actions/workflows/ci.yml/badge.svg)](https://github.com/isgr870/VortexA-/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-3.6.1-informational)](VERSION)
 
-Version **3.5.11** · Python 3.10+ · MIT License
+**Offline-first robot design studio** for phone, desktop, and web.  
+Author manipulators and mobile robots → validate structure → export **URDF · ROS 2 · MuJoCo · USD**.
 
-## Demo path (60 seconds)
-1. Start bridge: `./texup` (Termux) or `./launch_desktop.sh`
-2. Open http://127.0.0.1:8080/?v=3510 → **Connected**
-3. TexaKit → **6-DoF Industrial Arm**
-4. **Joints** — drag live pose · **Control** — Home / jog
-5. **Validate** → **Export URDF**
+> Honest scope: serial-chain design and export toolkit — **not** a certified physics simulator or motor controller.
 
-Automated smoke: `python scripts/demo_smoke.py`
+## Downloads
 
-## Quick start
+| Platform | How |
+|----------|-----|
+| **Windows / Linux / macOS** | [Actions → Build Desktop](https://github.com/isgr870/VortexA-/actions) artifacts, or [Releases](https://github.com/isgr870/VortexA-/releases) |
+| **Termux** | `./texup` → http://127.0.0.1:8080 |
+| **Web / PWA** | Build Web workflow |
+
+Extract the desktop zip and run the app — no manual Python setup required for those bundles.
+
+## Quick start (from source)
+
 ```bash
 git clone https://github.com/isgr870/VortexA-.git
 cd VortexA-
-pip install -r requirements.txt
+python -m venv .venv && source .venv/bin/activate  # optional
+pip install -r requirements-dev.txt
+pytest -q
 python scripts/demo_smoke.py
-./launch_desktop.sh   # or ./texup on Termux
+python packaging/desktop_entry.py
 ```
 
-## Packaging
-| Target | How |
-|--------|-----|
-| Web / PWA | Static UI + local bridge · workflow `Build Web` |
-| Windows / Linux | PyInstaller · workflow `Build Desktop` |
-| Android / iOS | Capacitor shell · see `packaging/MOBILE.md` |
+## Demo path (60s)
+1. Start → Connected  
+2. TexaKit → **6-DoF Industrial Arm**  
+3. Joints → pose · **Validate** · **Export URDF**
 
-Run workflows from the GitHub **Actions** tab (`workflow_dispatch` or version tags `v*`).
+## Repository layout
 
-## Architecture
 ```
-Browser UI (Three.js) --HTTP :8080--> static files
-       |
-       +-- WebSocket :8766 --> server.py --> scripts/ (FK, IK, export, health)
+server.py              WebSocket bridge (localhost by default)
+index.html             Studio UI
+scripts/               Kinematics, export, security, smoke
+assets/templates/      Robot blueprints
+assets/examples/       Sample projects
+tests/                 pytest suite
+packaging/             Desktop entry + mobile notes
+.github/workflows/     CI, desktop, web, release
+docs/                  Architecture & security model
 ```
 
-## Repository
-- `server.py` — local computation bridge  
-- `index.html` — Studio UI (VortexaCore + VortexaView)  
-- `assets/templates` — blueprints  
-- `scripts/demo_smoke.py` — CI / investor regression  
+## Security defaults
+- Bind **127.0.0.1** only (`VORTEXA_ALLOW_LAN=1` to expose)
+- Session token required for export / project file ops  
+- Path containment for reads/writes  
+
+See [SECURITY.md](SECURITY.md) and [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md).
+
+## Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md). Open issues with the templates under `.github/ISSUE_TEMPLATE/`.
 
 ## License
-MIT — see [LICENSE](LICENSE).
+MIT — [LICENSE](LICENSE)

@@ -2,20 +2,46 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, hardening]
   pull_request:
+    branches: [main]
 
 jobs:
-  smoke:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Install deps
-        run: pip install -r requirements.txt
-      - name: Demo smoke (templates → FK → URDF)
-        run: python scripts/demo_smoke.py
-      - name: Server syntax
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+      - name: Syntax
         run: python -c "import ast; ast.parse(open('server.py').read())"
+      - name: Unit tests
+        run: pytest -q tests/
+      - name: Demo smoke
+        run: python scripts/demo_smoke.py
+      - name: Security helpers
+        run: pytest -q tests/test_security.py
+
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Forbid personal paths and bulk binaries in source
+        run: |
+          if git ls-files | grep -E '^\~(/|$)' ; then
+            echo "Personal ~ path is tracked — remove it"
+            exit 1
+          fi
+          if git ls-files | grep -E 'VortexA-.*\.zip$' ; then
+            echo "Release zip tracked in git — remove it"
+            exit 1
+          fi
+          echo "Hygiene OK"
