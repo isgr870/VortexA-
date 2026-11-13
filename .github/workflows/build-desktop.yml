@@ -36,7 +36,7 @@ jobs:
           cp server.py index.html VERSION dist/VortexaStudio-Windows/ 2>/dev/null || true
           cp -r assets vendor scripts config dist/VortexaStudio-Windows/ 2>/dev/null || true
           cd dist && 7z a -tzip VortexaStudio-Windows.zip VortexaStudio-Windows
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: VortexaStudio-Windows
           path: dist/VortexaStudio-Windows.zip
@@ -70,7 +70,7 @@ jobs:
           cp -r assets vendor scripts config dist/VortexaStudio-Linux/
           chmod +x dist/VortexaStudio-Linux/VortexaStudio || true
           cd dist && zip -r VortexaStudio-Linux.zip VortexaStudio-Linux
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: VortexaStudio-Linux
           path: dist/VortexaStudio-Linux.zip
@@ -107,7 +107,7 @@ jobs:
           cp server.py index.html VERSION dist/VortexaStudio-macOS/
           cp -r assets vendor scripts config dist/VortexaStudio-macOS/
           cd dist && zip -r VortexaStudio-macOS.zip VortexaStudio-macOS
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: VortexaStudio-macOS
           path: dist/VortexaStudio-macOS.zip

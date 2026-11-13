@@ -13,7 +13,7 @@ jobs:
           mkdir -p dist-ios
           cp packaging/MOBILE.md dist-ios/
           echo "IPA requires Apple Developer certs in GitHub Secrets; see MOBILE.md" > dist-ios/STATUS.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Vortexa-ios-scaffold
           path: dist-ios
