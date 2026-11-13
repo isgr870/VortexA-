@@ -1,14 +1,15 @@
 # Changelog
 
+## 3.6.3 — 2026-11-13
+- Investor package: INVESTOR brief, EXPORTS matrix, DEMO strategy
+- README positioned for discovery and diligence
+- Version 3.6.3
+
 ## 3.6.2 — 2026-11-13
-- Investor-facing docs: ROADMAP, PRODUCT brief, Code of Conduct
-- Collision API marked experimental with explicit disclaimer
-- Health reports include structural-heuristic note
-- pytest.ini (asyncio scope); version 3.6.2
+- ROADMAP, PRODUCT, Code of Conduct; experimental collision labeling
 
 ## 3.6.1 — 2026-11-13
-- pytest suite, CI matrix, hygiene job, Dependabot, issue/PR templates
-- SECURITY.md, architecture docs, professional README
+- pytest CI, hygiene, SECURITY, professional baseline
 
 ## 3.6.0 — 2026-11-13
-- P0 security + desktop packaging fix
+- P0 security + desktop packaging
