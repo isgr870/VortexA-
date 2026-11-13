@@ -1,37 +1,27 @@
-# Vortexa mobile packaging (GitHub Actions)
+# Mobile packaging
 
-## Architecture
-Phone/desktop apps are a **WebView shell** around the existing UI, plus a local
-Python bridge (`server.py`) where the platform allows it.
+## Goal
+One-tap APK / IPA for Vortexa UI. Full offline Python bridge on mobile still needs an
+embedded runtime (Chaquopy / Pyodide / companion service). That is phased work.
 
-| Target | Strategy |
-|--------|----------|
-| Web / PWA | `index.html` + `manifest.webmanifest` + `sw.js` (this repo) |
-| Android APK | Capacitor WebView → load UI; bridge via localhost or embedded termux-like service later |
-| iOS | Capacitor on **macOS** runner (Apple certs required for device install) |
-| Windows EXE | PyInstaller workflow `build-desktop.yml` |
-| Linux | Same PyInstaller workflow |
-
-## Android (Capacitor) — run on GitHub or locally
+## Near-term Android (Capacitor WebView + Termux bridge)
 ```bash
-npm create capacitor@latest vortexa-app -- --template=blank-typescript
-# copy dist-web into capacitor www/
+npm create @capacitor/app vortexa-cap -- --template=blank
+cd vortexa-cap
+# copy index.html, vendor, assets into dist/
 npx cap add android
 npx cap sync android
-npx cap open android   # or ./gradlew assembleDebug
+cd android && ./gradlew assembleDebug
+# APK: android/app/build/outputs/apk/debug/app-debug.apk
 ```
-GitHub: use `macos-latest` / `ubuntu-latest` with Android SDK for debug APK artifacts.
-Signing a Play release needs your keystore (GitHub Secrets).
+
+Point the WebView at http://127.0.0.1:8080 when Termux runs texup, or ship static
+assets offline (compute via desktop bridge).
 
 ## iOS
-Requires Apple Developer account + certificates.
+Requires Apple Developer account and macOS.
 ```bash
 npx cap add ios
 npx cap sync ios
-# Xcode archive on macOS runner
+# Xcode -> Archive
 ```
-
-## Reality check
-- Full offline robotics bridge inside APK/iOS needs an embedded Python runtime
-  (e.g. Chaquopy on Android) or a companion Termux session — not a single click yet.
-- Near-term investor demo: **desktop EXE/Linux bundle** + **phone browser to Termux** + **PWA icon**.

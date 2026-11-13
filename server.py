@@ -32,6 +32,7 @@ from scripts.mjcf_export import generate_mjcf
 from scripts.usd_export import export_usd
 from scripts.health_validator import validate_robot, enrich_inertia
 from scripts.urdf_import import parse_urdf
+from scripts.security import safe_name, safe_template_name, resolve_under
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,6 +40,28 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger("VortexaBridge")
+
+def _read_version() -> str:
+    try:
+        return (ROOT / "VERSION").read_text(encoding="utf-8").strip() or "3.6.0"
+    except Exception:
+        return "3.6.0"
+
+APP_VERSION = _read_version()
+SESSION_TOKEN = os.environ.get("VORTEXA_TOKEN", "").strip()
+ALLOWED_ORIGINS = {
+    o.strip()
+    for o in os.environ.get(
+        "VORTEXA_ALLOWED_ORIGINS",
+        "http://127.0.0.1:8080,http://localhost:8080,http://127.0.0.1:8080/,http://localhost:8080/",
+    ).split(",")
+    if o.strip()
+}
+# Empty token = generate ephemeral on start (printed once)
+import secrets as _secrets
+if not SESSION_TOKEN:
+    SESSION_TOKEN = _secrets.token_urlsafe(24)
+
 
 TEMPLATES_DIR = ROOT / "assets" / "templates"
 KIT_DIR = ROOT / "assets" / "kit"
@@ -67,7 +90,24 @@ def load_template(template_name: str) -> dict:
 
 async def handle_client(websocket):
     client = websocket.remote_address
-    logger.info("Client connected: %s", client)
+    origin = None
+    try:
+        origin = websocket.request.headers.get("Origin") if hasattr(websocket, "request") else None
+    except Exception:
+        origin = None
+    # websockets v10+ may expose origin differently
+    if origin is None:
+        try:
+            origin = dict(getattr(websocket, "request_headers", {}) or {}).get("Origin")
+        except Exception:
+            pass
+    if origin and ALLOWED_ORIGINS and origin.rstrip("/") not in {o.rstrip("/") for o in ALLOWED_ORIGINS}:
+        # Allow missing Origin for non-browser clients (Termux tools); block bad browser origins
+        if origin.startswith("http://") or origin.startswith("https://"):
+            logger.warning("Rejected Origin %s from %s", origin, client)
+            await websocket.close(code=1008, reason="origin not allowed")
+            return
+    logger.info("Client connected: %s origin=%s", client, origin)
 
     try:
         async for raw in websocket:
@@ -81,11 +121,26 @@ async def handle_client(websocket):
                 continue
 
             action = data.get("action")
+            # Token gate for mutating / export / filesystem actions
+            protected = {
+                "compile_urdf", "export_ros2", "export_mjcf", "export_usd",
+                "export_trajectory", "export_trajectory_csv", "save_project",
+                "load_project", "motion_save", "import_urdf", "export_pybullet",
+            }
+            if action in protected and SESSION_TOKEN:
+                token = data.get("token") or data.get("auth_token") or ""
+                if token != SESSION_TOKEN:
+                    await websocket.send(json.dumps({
+                        "status": "error",
+                        "action": action,
+                        "message": "Unauthorized — open UI from local Vortexa server (session token required for exports).",
+                    }))
+                    continue
             logger.info("Action: %s", action)
 
             try:
                 if action == "load_template":
-                    template_name = data.get("template_name", "articulated_arm")
+                    template_name = safe_template_name(data.get("template_name", "articulated_arm"))
                     template = load_template(template_name)
                     chain_name = data.get("chain") or template.get("default_chain")
                     chains = template.get("chains")
@@ -202,9 +257,9 @@ async def handle_client(websocket):
 
                 elif action == "compile_urdf":
                     topology = data.get("topology") or load_template("articulated_arm")["links"]
-                    robot_name = data.get("robot_name", "vortexa_robot")
+                    robot_name = safe_name(data.get("robot_name", "vortexa_robot"), "vortexa_robot")
                     urdf_str = generate_urdf(topology, robot_name=robot_name)
-                    out_path = URDF_DIR / f"{robot_name}.urdf"
+                    out_path = resolve_under(URDF_DIR, f"{robot_name}.urdf")
                     out_path.write_text(urdf_str, encoding="utf-8")
                     response = {
                         "status": "success",
@@ -224,7 +279,7 @@ async def handle_client(websocket):
 
                 elif action == "export_ros2":
                     topology = data.get("topology") or load_template("articulated_arm")["links"]
-                    robot_name = data.get("robot_name", "vortexa_robot")
+                    robot_name = safe_name(data.get("robot_name", "vortexa_robot"), "vortexa_robot")
                     files = generate_ros2_package(topology, robot_name=robot_name)
                     response = {
                         "status": "success",
@@ -235,9 +290,9 @@ async def handle_client(websocket):
 
                 elif action == "export_mjcf":
                     topology = data.get("topology") or load_template("articulated_arm")["links"]
-                    robot_name = data.get("robot_name", "vortexa_robot")
+                    robot_name = safe_name(data.get("robot_name", "vortexa_robot"), "vortexa_robot")
                     mjcf = generate_mjcf(topology, robot_name=robot_name)
-                    out = URDF_DIR / f"{robot_name}.xml"
+                    out = resolve_under(URDF_DIR, f"{robot_name}.xml")
                     out.write_text(mjcf, encoding="utf-8")
                     response = {
                         "status": "success",
@@ -282,10 +337,10 @@ async def handle_client(websocket):
                     # Joint timeseries CSV (ROS bag-friendly columns)
                     path = data.get("joint_path") or []
                     dt = float(data.get("dt") or 0.05)
-                    name = data.get("robot_name") or "vortexa_traj"
+                    name = safe_name(data.get("robot_name") or "vortexa_traj", "vortexa_traj")
                     out_dir = ROOT / "urdf"
                     out_dir.mkdir(parents=True, exist_ok=True)
-                    csv_path = out_dir / f"{name}_trajectory.csv"
+                    csv_path = resolve_under(out_dir, f"{name}_trajectory.csv")
                     lines = ["time," + ",".join(f"j{i}" for i in range(len(path[0]) if path else []))]
                     for k, row in enumerate(path):
                         lines.append(f"{k*dt:.4f}," + ",".join(f"{float(v):.6f}" for v in row))
@@ -583,7 +638,8 @@ async def handle_client(websocket):
                     response = {
                         "status": "success",
                         "action": "health",
-                        "version": "3.5.0",
+                        "version": APP_VERSION,
+                        "token": SESSION_TOKEN,
                         "texakit": "3.1",
                         "templates": [p.stem for p in TEMPLATES_DIR.glob("*.json")],
                     }
@@ -695,14 +751,20 @@ async def handle_client(websocket):
                     }
 
                 elif action == "load_project":
-                    fname = data.get("file") or data.get("name")
+                    fname = data.get("file") or data.get("name") or ""
+                    base = Path(str(fname)).name  # strip directories / traversal
+                    if base and not base.endswith(".vortexa.json"):
+                        base = safe_name(base.replace(".json", ""), "project") + ".vortexa.json"
                     path = None
-                    if fname:
-                        cand = ROOT / "projects" / fname
-                        if not cand.exists():
-                            cand = ROOT / "assets" / "examples" / fname
-                        if cand.exists():
-                            path = cand
+                    if base:
+                        for root in (ROOT / "projects", ROOT / "assets" / "examples"):
+                            try:
+                                cand = resolve_under(root, base)
+                            except PermissionError:
+                                continue
+                            if cand.is_file():
+                                path = cand
+                                break
                     if path is None:
                         response = {"status": "error", "action": "load_project", "message": "Project file not found"}
                     else:
@@ -711,6 +773,7 @@ async def handle_client(websocket):
                             "status": "success",
                             "action": "load_project",
                             "project": project,
+                            "file": path.name,
                             "message": f"Loaded {project.get('name', path.name)}",
                         }
 
@@ -744,19 +807,32 @@ async def handle_client(websocket):
 
 async def main():
     host = os.environ.get("VORTEXA_HOST", "127.0.0.1")
+    # Force localhost by default — LAN requires VORTEXA_ALLOW_LAN=1
+    if host not in ("127.0.0.1", "localhost", "::1") and os.environ.get("VORTEXA_ALLOW_LAN") != "1":
+        logger.warning("Host %s overridden to 127.0.0.1 (set VORTEXA_ALLOW_LAN=1 to expose)", host)
+        host = "127.0.0.1"
     port = int(os.environ.get("VORTEXA_PORT", "8766"))
-    logger.info("Vortexa Studio Bridge v3.5.7 starting on ws://%s:%s", host, port)
-    print(f"VortexaBridge listening ws://{host}:{port}", flush=True)
-    # reuse_port=False: more reliable on Termux/Android
+    logger.info("Vortexa Studio Bridge v%s starting on ws://%s:%s", APP_VERSION, host, port)
+    print(f"VortexaBridge v{APP_VERSION} listening ws://{host}:{port}", flush=True)
+    print(f"VORTEXA_TOKEN={SESSION_TOKEN}", flush=True)
+    # write token for local UI bootstrap
+    try:
+        (ROOT / "config" / "session.json").write_text(
+            json.dumps({"token": SESSION_TOKEN, "version": APP_VERSION,
+                        "token": SESSION_TOKEN, "ws": f"ws://{host}:{port}"}),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
     async with serve(
         handle_client,
         host,
         port,
         ping_interval=30,
         ping_timeout=30,
-        max_size=8 * 1024 * 1024,
+        max_size=2 * 1024 * 1024,
     ):
-        await asyncio.Future()  # run forever
+        await asyncio.Future()
 
 
 if __name__ == "__main__":

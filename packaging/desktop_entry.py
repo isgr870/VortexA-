@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Desktop entry: start Vortexa bridge + static server and open the browser."""
+"""Vortexa Studio desktop launcher — starts bridge + HTTP in-process and opens browser."""
 from __future__ import annotations
 
 import os
@@ -8,19 +8,36 @@ import time
 import socket
 import threading
 import webbrowser
-import subprocess
 from pathlib import Path
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-# Resolve bundle root (PyInstaller sets _MEIPASS)
-if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-    ROOT = Path(sys._MEIPASS)
-    APP_ROOT = Path(sys.executable).resolve().parent
-else:
-    ROOT = Path(__file__).resolve().parents[1]
-    APP_ROOT = ROOT
+def app_root() -> Path:
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        # Prefer files next to the executable (full tree shipped beside binary)
+        beside = Path(sys.executable).resolve().parent
+        if (beside / "server.py").exists() or (beside / "index.html").exists():
+            return beside
+        return Path(sys._MEIPASS)
+    return Path(__file__).resolve().parents[1]
 
+ROOT = app_root()
+os.chdir(ROOT)
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-def free_port(host: str, port: int) -> bool:
+os.environ.setdefault("VORTEXA_HOST", "127.0.0.1")
+os.environ.setdefault("VORTEXA_PORT", "8766")
+HTTP_PORT = int(os.environ.get("HTTP_PORT", "8080"))
+HOST = os.environ["VORTEXA_HOST"]
+WS_PORT = int(os.environ["VORTEXA_PORT"])
+
+class RootHandler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=str(ROOT), **kwargs)
+    def log_message(self, fmt, *args):
+        pass
+
+def port_free(host: str, port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
@@ -29,62 +46,42 @@ def free_port(host: str, port: int) -> bool:
         except OSError:
             return False
 
+def start_http():
+    httpd = ThreadingHTTPServer((HOST, HTTP_PORT), RootHandler)
+    t = threading.Thread(target=httpd.serve_forever, daemon=True)
+    t.start()
+    return httpd
 
-def main() -> None:
-    host = os.environ.get("VORTEXA_HOST", "127.0.0.1")
-    ws_port = int(os.environ.get("VORTEXA_PORT", "8766"))
-    http_port = int(os.environ.get("HTTP_PORT", "8080"))
-    os.environ["VORTEXA_HOST"] = host
-    os.environ["VORTEXA_PORT"] = str(ws_port)
+def start_bridge():
+    # Import server module and run its asyncio main in this process
+    import asyncio
+    import server as vortexa_server
+    asyncio.run(vortexa_server.main())
 
-    # Prefer files next to executable; fall back to bundle
-    work = APP_ROOT if (APP_ROOT / "server.py").exists() else ROOT
-    os.chdir(work)
-
-    if not free_port(host, ws_port):
-        print(f"Port {ws_port} busy — stop other Vortexa instances.")
-    if not free_port(host, http_port):
-        print(f"Port {http_port} busy — stop other HTTP servers.")
-
-    # Ensure server.py is importable from work dir
-    server_py = work / "server.py"
-    if not server_py.exists():
-        # copy reference from bundle is not available; require server alongside
-        print("server.py not found next to app; place full Vortexa tree beside the executable.")
+def main():
+    if not (ROOT / "index.html").exists():
+        print("index.html missing — incomplete install at", ROOT)
         sys.exit(1)
+    if not port_free(HOST, WS_PORT):
+        print(f"Port {WS_PORT} in use. Close other Vortexa instances.")
+    if not port_free(HOST, HTTP_PORT):
+        print(f"Port {HTTP_PORT} in use. Close other HTTP servers.")
 
-    env = os.environ.copy()
-    bridge = subprocess.Popen(
-        [sys.executable, "-u", str(server_py)],
-        cwd=str(work),
-        env=env,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    http = subprocess.Popen(
-        [sys.executable, "-u", "-m", "http.server", str(http_port), "--bind", host],
-        cwd=str(work),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    url = f"http://{host}:{http_port}/?v=3510"
-    print("Vortexa Studio desktop")
+    httpd = start_http()
+    url = f"http://{HOST}:{HTTP_PORT}/?v=360"
+    print("Vortexa Studio")
     print("  UI ", url)
-    print("  WS ", f"ws://{host}:{ws_port}")
-    time.sleep(1.0)
-    webbrowser.open(url)
+    print("  WS ", f"ws://{HOST}:{WS_PORT}")
+    threading.Timer(1.0, lambda: webbrowser.open(url)).start()
     try:
-        while bridge.poll() is None and http.poll() is None:
-            time.sleep(0.5)
+        start_bridge()
     except KeyboardInterrupt:
         pass
     finally:
-        for p in (bridge, http):
-            try:
-                p.terminate()
-            except Exception:
-                pass
-
+        try:
+            httpd.shutdown()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     main()

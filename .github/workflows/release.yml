@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release-note:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            ## Vortexa Studio ${{ github.ref_name }}
+
+            ### Downloads
+            After **Build Desktop** / **Build Web** workflows finish on this tag, download artifacts from Actions,
+            or attach them to this release.
+
+            | Package | Use |
+            |---------|-----|
+            | Windows zip | Extract → run `VortexaStudio.exe` |
+            | Linux zip | Extract → run `./VortexaStudio` |
+            | macOS zip | Extract → open app / run binary |
+            | Web PWA | Static UI (needs local bridge) |
+
+            Android APK is under active packaging (`packaging/MOBILE.md`).

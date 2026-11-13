@@ -6,28 +6,6 @@ on:
     tags: ["v*"]
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install -r requirements.txt pyinstaller
-      - name: Bundle desktop launcher
-        run: |
-          pyinstaller --noconfirm --clean \
-            --name VortexaStudio \
-            --add-data "index.html:." \
-            --add-data "assets:assets" \
-            --add-data "vendor:vendor" \
-            --add-data "scripts:scripts" \
-            packaging/desktop_entry.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: VortexaStudio-linux
-          path: dist/VortexaStudio
-
   windows:
     runs-on: windows-latest
     steps:
@@ -36,17 +14,100 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt pyinstaller
-      - name: Bundle Windows exe
+      - name: Build Windows folder
         shell: bash
         run: |
-          pyinstaller --noconfirm --clean \
-            --name VortexaStudio \
+          pyinstaller --noconfirm --clean --windowed --name VortexaStudio \
+            --add-data "server.py;." \
+            --add-data "VERSION;." \
             --add-data "index.html;." \
+            --add-data "manifest.webmanifest;." \
+            --add-data "sw.js;." \
             --add-data "assets;assets" \
             --add-data "vendor;vendor" \
             --add-data "scripts;scripts" \
+            --add-data "config;config" \
+            --hidden-import websockets \
+            --hidden-import numpy \
             packaging/desktop_entry.py
+          mkdir -p dist/VortexaStudio-Windows
+          cp -r dist/VortexaStudio/* dist/VortexaStudio-Windows/ 2>/dev/null || cp -r dist/VortexaStudio dist/VortexaStudio-Windows/
+          # ship sources beside exe for reliability
+          cp server.py index.html VERSION dist/VortexaStudio-Windows/ 2>/dev/null || true
+          cp -r assets vendor scripts config dist/VortexaStudio-Windows/ 2>/dev/null || true
+          cd dist && 7z a -tzip VortexaStudio-Windows.zip VortexaStudio-Windows
       - uses: actions/upload-artifact@v4
         with:
-          name: VortexaStudio-windows
-          path: dist/VortexaStudio
+          name: VortexaStudio-Windows
+          path: dist/VortexaStudio-Windows.zip
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pyinstaller
+      - name: Build Linux folder
+        run: |
+          pyinstaller --noconfirm --clean --name VortexaStudio \
+            --add-data "server.py:." \
+            --add-data "VERSION:." \
+            --add-data "index.html:." \
+            --add-data "manifest.webmanifest:." \
+            --add-data "sw.js:." \
+            --add-data "assets:assets" \
+            --add-data "vendor:vendor" \
+            --add-data "scripts:scripts" \
+            --add-data "config:config" \
+            --hidden-import websockets \
+            --hidden-import numpy \
+            packaging/desktop_entry.py
+          mkdir -p dist/VortexaStudio-Linux
+          cp -r dist/VortexaStudio/* dist/VortexaStudio-Linux/
+          cp server.py index.html VERSION dist/VortexaStudio-Linux/
+          cp -r assets vendor scripts config dist/VortexaStudio-Linux/
+          chmod +x dist/VortexaStudio-Linux/VortexaStudio || true
+          cd dist && zip -r VortexaStudio-Linux.zip VortexaStudio-Linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VortexaStudio-Linux
+          path: dist/VortexaStudio-Linux.zip
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pyinstaller
+      - name: Build macOS app folder
+        run: |
+          pyinstaller --noconfirm --clean --windowed --name VortexaStudio \
+            --add-data "server.py:." \
+            --add-data "VERSION:." \
+            --add-data "index.html:." \
+            --add-data "manifest.webmanifest:." \
+            --add-data "sw.js:." \
+            --add-data "assets:assets" \
+            --add-data "vendor:vendor" \
+            --add-data "scripts:scripts" \
+            --add-data "config:config" \
+            --hidden-import websockets \
+            --hidden-import numpy \
+            packaging/desktop_entry.py
+          mkdir -p dist/VortexaStudio-macOS
+          if [ -d dist/VortexaStudio.app ]; then
+            cp -R dist/VortexaStudio.app dist/VortexaStudio-macOS/
+          else
+            cp -r dist/VortexaStudio/* dist/VortexaStudio-macOS/ 2>/dev/null || true
+          fi
+          cp server.py index.html VERSION dist/VortexaStudio-macOS/
+          cp -r assets vendor scripts config dist/VortexaStudio-macOS/
+          cd dist && zip -r VortexaStudio-macOS.zip VortexaStudio-macOS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VortexaStudio-macOS
+          path: dist/VortexaStudio-macOS.zip
