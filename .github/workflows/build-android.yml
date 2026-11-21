@@ -13,7 +13,7 @@ jobs:
           mkdir -p dist-android
           cp packaging/MOBILE.md dist-android/
           echo "Debug APK build requires Capacitor project init + Android SDK; see MOBILE.md" > dist-android/STATUS.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Vortexa-android-scaffold
           path: dist-android
