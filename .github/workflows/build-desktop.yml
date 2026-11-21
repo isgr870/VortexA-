@@ -29,6 +29,21 @@ jobs:
             --add-data "config;config" \
             --hidden-import websockets \
             --hidden-import numpy \
+            --hidden-import xml \
+            --hidden-import xml.etree \
+            --hidden-import xml.etree.ElementTree \
+            --hidden-import xml.dom \
+            --hidden-import xml.dom.minidom \
+            --hidden-import scripts \
+            --hidden-import scripts.mjcf_export \
+            --hidden-import scripts.urdf_import \
+            --hidden-import scripts.urdf_generator_api \
+            --hidden-import scripts.kinematics_engine \
+            --hidden-import scripts.health_validator \
+            --hidden-import scripts.security \
+            --hidden-import scripts.ros2_export \
+            --hidden-import scripts.usd_export \
+            --collect-submodules xml \
             packaging/desktop_entry.py
           mkdir -p dist/VortexaStudio-Windows
           cp -r dist/VortexaStudio/* dist/VortexaStudio-Windows/ 2>/dev/null || cp -r dist/VortexaStudio dist/VortexaStudio-Windows/
@@ -63,6 +78,21 @@ jobs:
             --add-data "config:config" \
             --hidden-import websockets \
             --hidden-import numpy \
+            --hidden-import xml \
+            --hidden-import xml.etree \
+            --hidden-import xml.etree.ElementTree \
+            --hidden-import xml.dom \
+            --hidden-import xml.dom.minidom \
+            --hidden-import scripts \
+            --hidden-import scripts.mjcf_export \
+            --hidden-import scripts.urdf_import \
+            --hidden-import scripts.urdf_generator_api \
+            --hidden-import scripts.kinematics_engine \
+            --hidden-import scripts.health_validator \
+            --hidden-import scripts.security \
+            --hidden-import scripts.ros2_export \
+            --hidden-import scripts.usd_export \
+            --collect-submodules xml \
             packaging/desktop_entry.py
           mkdir -p dist/VortexaStudio-Linux
           cp -r dist/VortexaStudio/* dist/VortexaStudio-Linux/
@@ -97,6 +127,21 @@ jobs:
             --add-data "config:config" \
             --hidden-import websockets \
             --hidden-import numpy \
+            --hidden-import xml \
+            --hidden-import xml.etree \
+            --hidden-import xml.etree.ElementTree \
+            --hidden-import xml.dom \
+            --hidden-import xml.dom.minidom \
+            --hidden-import scripts \
+            --hidden-import scripts.mjcf_export \
+            --hidden-import scripts.urdf_import \
+            --hidden-import scripts.urdf_generator_api \
+            --hidden-import scripts.kinematics_engine \
+            --hidden-import scripts.health_validator \
+            --hidden-import scripts.security \
+            --hidden-import scripts.ros2_export \
+            --hidden-import scripts.usd_export \
+            --collect-submodules xml \
             packaging/desktop_entry.py
           mkdir -p dist/VortexaStudio-macOS
           if [ -d dist/VortexaStudio.app ]; then

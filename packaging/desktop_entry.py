@@ -11,6 +11,11 @@ import webbrowser
 from pathlib import Path
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
+# Force PyInstaller to collect stdlib modules used by scripts/* exporters
+import xml.etree.ElementTree  # noqa: F401
+import xml.dom.minidom  # noqa: F401
+import json, csv, pathlib, asyncio, logging, hashlib, secrets, re  # noqa: F401
+
 def app_root() -> Path:
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
         # Prefer files next to the executable (full tree shipped beside binary)
