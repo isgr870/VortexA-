@@ -66,7 +66,6 @@ def validate_robot(topology: Sequence[Dict[str, Any]], robot_name: str = "robot"
 
     if not topology:
         return {
-        "note": note,
             "score": 0,
             "grade": "F",
             "issues": [{"level": "error", "code": "empty", "message": "No parts — add a base and links."}],
