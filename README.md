@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/isgr870/VortexA-/actions/workflows/ci.yml/badge.svg)](https://github.com/isgr870/VortexA-/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-3.6.4-informational)](VERSION)
+[![Version](https://img.shields.io/badge/version-3.6.5-informational)](VERSION)
 [![Release](https://img.shields.io/github/v/release/isgr870/VortexA-?sort=semver)](https://github.com/isgr870/VortexA-/releases)
 
 **Offline-first workspace for designing, validating, and exporting robots — on phone, desktop, and web.**

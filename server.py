@@ -641,7 +641,7 @@ async def handle_client(websocket):
                         "status": "success",
                         "action": "health",
                         "version": APP_VERSION,
-                        "token": SESSION_TOKEN,
+                        "auth_required": bool(SESSION_TOKEN),
                         "product_stage": "early_design_studio",
                         "texakit": "3.1",
                         "templates": [p.stem for p in TEMPLATES_DIR.glob("*.json")],
@@ -817,7 +817,7 @@ async def main():
     port = int(os.environ.get("VORTEXA_PORT", "8766"))
     logger.info("Vortexa Studio Bridge v%s starting on ws://%s:%s", APP_VERSION, host, port)
     print(f"VortexaBridge v{APP_VERSION} listening ws://{host}:{port}", flush=True)
-    print(f"VORTEXA_TOKEN={SESSION_TOKEN}", flush=True)
+    print("VORTEXA_TOKEN=(set — stored in config/session.json; not returned by health)", flush=True)
     # write token for local UI bootstrap
     try:
         (ROOT / "config" / "session.json").write_text(

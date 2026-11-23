@@ -23,7 +23,6 @@ def _cylinder_inertia(mass: float, radius: float, length: float) -> Dict[str, fl
     ixx = mass * (3 * r2 + h2) / 12.0
     iyy = ixx
     izz = 0.5 * mass * r2
-    note = "Structural heuristic only — not a Gazebo/MuJoCo/Isaac certification."
     return {"ixx": ixx, "iyy": iyy, "izz": izz, "ixy": 0.0, "ixz": 0.0, "iyz": 0.0}
 
 
@@ -72,6 +71,12 @@ def validate_robot(topology: Sequence[Dict[str, Any]], robot_name: str = "robot"
             "warnings": [],
             "summary": "Empty robot",
             "ready_for": [],
+            "structural_targets": [],
+            "compatibility_verification": "not_tested",
+            "note": "Structural heuristic only — not a Gazebo/MuJoCo/Isaac certification.",
+            "part_count": 0,
+            "dof": 0,
+            "robot_name": robot_name,
         }
 
     names = []
@@ -169,7 +174,9 @@ def validate_robot(topology: Sequence[Dict[str, Any]], robot_name: str = "robot"
         "issues": issues,
         "warnings": warnings,
         "summary": summary,
-        "ready_for": ready,
+        "ready_for": ready,  # deprecated alias — structural completeness only
+        "structural_targets": ready,
+        "compatibility_verification": "not_tested",
         "part_count": len(topology),
         "dof": len(movable),
         "robot_name": robot_name,

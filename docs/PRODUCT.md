@@ -13,7 +13,8 @@ Offline robot **design and export** studio: sketch kinematics, validate structur
 |------------|--------|
 | Blueprint library (arms, humanoid, hexapod, rover, quadrotor) | Yes |
 | 3D view + joint control + position IK | Yes |
-| Structural health scoring | Heuristic |
+| Structural health scoring | Heuristic — **not** simulator import verification |
+| Export target “readiness” labels | Structural completeness only (`compatibility_verification: not_tested`) |
 | URDF / ROS 2 package skeleton / MJCF / USD export | Yes |
 | Local offline operation (Termux + desktop) | Yes |
 | Physical robot control | No |
