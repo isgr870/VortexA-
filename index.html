@@ -745,7 +745,7 @@
       document.querySelectorAll('.mode-btn').forEach(function(btn){
         btn.addEventListener('click', function(){ setMode(btn.dataset.mode); });
       });
-      function bind(id, fn){ var el=$(id); if(el && !el.onclick) el.onclick = fn; }
+      function bind(id, fn){ var el=$(id); if(el) el.addEventListener('click', fn); }
 
       bind('btn-gallery', function(){ setMode('object'); showTab('library'); });
       bind('btn-new', function(){ loadTemplate('blank'); });
@@ -2383,6 +2383,7 @@
     (document.getElementById('btn-list-motion')||{}).onclick = () => send({ action: 'motion_list' });
 
     // handle import + motion in onmessage
+    const _prevHandle = typeof handleServerMessage === 'function' ? handleServerMessage : null;
 
 
     // ===== TexaKit parts library + workspaces (v3.5.11) =====
@@ -2880,6 +2881,7 @@
     };
 
     // Message handlers extension
+    const _prevHandle = typeof handleServerMessage === 'function' ? handleServerMessage : null;
     // Patch into existing onmessage success branches by wrapping show path
     const _origOnMsg = null;
 

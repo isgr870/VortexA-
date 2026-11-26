@@ -26,76 +26,36 @@ def _cylinder_inertia(mass: float, radius: float, length: float) -> Dict[str, fl
     return {"ixx": ixx, "iyy": iyy, "izz": izz, "ixy": 0.0, "ixz": 0.0, "iyz": 0.0}
 
 
-def enrich_topology_with_provenance(
-    topology: Sequence[Dict[str, Any]],
-) -> tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
-    """Enrich topology while recording the origin of each generated field.
-
-    Provenance describes data origin, not physical measurement or verification.
-    """
+def enrich_inertia(topology: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Fill missing mass/inertia from geometry + material density."""
     out = []
-    provenance = []
-
     for link in topology:
         L = dict(link)
-        movable = L.get("type") in ("revolute", "continuous", "prismatic")
-
-        mass_present = L.get("mass") is not None and float(L.get("mass") or 0) > 0
-        inertia_present = bool(L.get("inertia"))
-        limit_present = bool(L.get("limit"))
-        collision_present = bool(L.get("collision"))
-
         length = max(0.02, float(L.get("length") or 0.2))
         radius = max(0.005, float(L.get("radius") or 0.04))
         mat = str(L.get("material") or "aluminum").lower()
         dens = DENSITY.get(mat, 2700.0)
         vol = math.pi * radius * radius * length
-
-        if not mass_present:
+        if L.get("mass") is None or float(L.get("mass") or 0) <= 0:
             L["mass"] = max(0.01, dens * vol)
-
         mass = float(L["mass"])
-        if not inertia_present:
+        if not L.get("inertia"):
             L["inertia"] = _cylinder_inertia(mass, radius, length)
-
-        if movable and not limit_present:
+        # Default joint limits for movable joints
+        if L.get("type") in ("revolute", "continuous", "prismatic") and not L.get("limit"):
             if L.get("type") == "prismatic":
-                L["limit"] = {
-                    "lower": 0.0, "upper": length,
-                    "effort": 80.0, "velocity": 0.5,
-                }
+                L["limit"] = {"lower": 0.0, "upper": length, "effort": 80.0, "velocity": 0.5}
             else:
-                L["limit"] = {
-                    "lower": -3.14159, "upper": 3.14159,
-                    "effort": 50.0, "velocity": 2.0,
-                }
-
-        if not collision_present:
+                L["limit"] = {"lower": -3.14159, "upper": 3.14159, "effort": 50.0, "velocity": 2.0}
+        # Collision primitive (slightly larger for safety margin)
+        if not L.get("collision"):
             L["collision"] = {
                 "type": "cylinder",
                 "radius": radius * 1.05,
                 "length": length * 1.02,
             }
-
         out.append(L)
-        provenance.append({
-            "mass": "present_in_input" if mass_present else "estimated",
-            "inertia": "present_in_input" if inertia_present else "estimated",
-            "limit": (
-                "present_in_input" if limit_present else
-                "defaulted" if movable else
-                "not_applicable"
-            ),
-            "collision": "present_in_input" if collision_present else "generated",
-        })
-
-    return out, provenance
-
-
-def enrich_inertia(topology: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Backward-compatible enrichment API; provenance is available separately."""
-    enriched, _ = enrich_topology_with_provenance(topology)
-    return enriched
+    return out
 
 
 def validate_robot(topology: Sequence[Dict[str, Any]], robot_name: str = "robot") -> Dict[str, Any]:
