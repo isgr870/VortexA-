@@ -30,7 +30,10 @@ from scripts.pybullet_sim import generate_pybullet_script
 from scripts.ros2_export import generate_ros2_package
 from scripts.mjcf_export import generate_mjcf
 from scripts.usd_export import export_usd
-from scripts.health_validator import validate_robot, enrich_inertia
+from scripts.health_validator import (
+    validate_robot,
+    enrich_topology_with_provenance,
+)
 from scripts.urdf_import import parse_urdf
 from scripts.security import safe_name, safe_template_name, resolve_under
 
@@ -48,6 +51,34 @@ def _read_version() -> str:
         return "3.6.0"
 
 APP_VERSION = _read_version()
+
+
+def _build_validation_response(topology, robot_name="vortexa_robot"):
+    enriched, field_provenance = enrich_topology_with_provenance(topology)
+    report = validate_robot(enriched, robot_name=robot_name)
+    return {
+        "status": "success",
+        "action": "validate_robot",
+        "report": report,
+        "enriched_topology": enriched,
+        "field_provenance": field_provenance,
+        "message": report.get("summary", "Validation complete"),
+    }
+
+
+def _build_enrichment_response(topology):
+    enriched, field_provenance = enrich_topology_with_provenance(topology)
+    return {
+        "status": "success",
+        "action": "enrich_physics",
+        "topology": enriched,
+        "field_provenance": field_provenance,
+        "message": (
+            f"Physics enriched for {len(enriched)} parts "
+            "(mass, inertia, limits, collision)."
+        ),
+    }
+
 SESSION_TOKEN = os.environ.get("VORTEXA_TOKEN", "").strip()
 ALLOWED_ORIGINS = {
     o.strip()
@@ -650,25 +681,11 @@ async def handle_client(websocket):
                 elif action == "validate_robot":
                     topology = data.get("topology") or []
                     name = data.get("robot_name") or "vortexa_robot"
-                    enriched = enrich_inertia(topology)
-                    report = validate_robot(enriched, robot_name=name)
-                    response = {
-                        "status": "success",
-                        "action": "validate_robot",
-                        "report": report,
-                        "enriched_topology": enriched,
-                        "message": report.get("summary", "Validation complete"),
-                    }
+                    response = _build_validation_response(topology, robot_name=name)
 
                 elif action == "enrich_physics":
                     topology = data.get("topology") or []
-                    enriched = enrich_inertia(topology)
-                    response = {
-                        "status": "success",
-                        "action": "enrich_physics",
-                        "topology": enriched,
-                        "message": f"Physics enriched for {len(enriched)} parts (mass, inertia, limits, collision).",
-                    }
+                    response = _build_enrichment_response(topology)
 
                 
                 elif action == "export_trajectory_csv":
